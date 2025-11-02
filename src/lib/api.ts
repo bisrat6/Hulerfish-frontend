@@ -381,16 +381,4 @@ export const bookingsAPI = {
   },
 };
 
-// Hosts API
-export const hostsAPI = {
-  getAll: async () => {
-    const response = await api.get("/hosts");
-    return response.data;
-  },
-  getOne: async (id: string) => {
-    const response = await api.get(`/hosts/${id}`);
-    return response.data;
-  },
-};
-
 export default api;

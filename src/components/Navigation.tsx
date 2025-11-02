@@ -26,9 +26,6 @@ const Navigation = () => {
             <Link to="/tours" className="text-foreground hover:text-primary transition-colors font-medium">
               Experiences
             </Link>
-            <Link to="/hosts" className="text-foreground hover:text-primary transition-colors font-medium">
-              Hosts
-            </Link>
             <Link to="/about" className="text-foreground hover:text-primary transition-colors font-medium">
               About
             </Link>
@@ -81,13 +78,6 @@ const Navigation = () => {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Experiences
-              </Link>
-              <Link 
-                to="/hosts" 
-                className="text-foreground hover:text-primary transition-colors font-medium"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Hosts
               </Link>
               <Link 
                 to="/about" 

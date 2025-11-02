@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
-import { User, Mail, LogOut, Edit, Save, X, BarChart3 } from "lucide-react";
+import { User, Mail, LogOut, Edit, Save, X, BarChart3, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usersAPI } from "@/lib/api";
 
@@ -236,8 +236,8 @@ const Profile = () => {
                       </>
                     )}
 
-                    {/* Host Panel */}
-                    {user?.hostStatus === "approved" && (
+                    {/* Host Panel - For Approved Hosts */}
+                    {user?.hostStatus === "approved" && user?.role !== "admin" && (
                       <>
                         <div className="pt-4 border-t">
                           <p className="text-sm font-medium text-muted-foreground mb-3">
@@ -247,14 +247,15 @@ const Profile = () => {
                         <Button
                           variant="hero"
                           size="lg"
-                          onClick={() => navigate("/host/dashboard")}
+                          onClick={() => navigate("/admin/experiences")}
                           className="w-full"
                         >
-                          <BarChart3 className="w-4 h-4 mr-2" />
-                          Host Dashboard
+                          <MapPin className="w-4 h-4 mr-2" />
+                          Manage My Experiences
                         </Button>
                       </>
                     )}
+
                   </div>
 
                   <div className="pt-4 border-t">

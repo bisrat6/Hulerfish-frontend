@@ -22,9 +22,8 @@ import AdminDashboard from "./pages/AdminDashboard";
 import TourManagement from "./pages/TourManagement";
 import UserManagement from "./pages/UserManagement";
 import ManageHostApplications from "./pages/ManageHostApplications";
+import HostManagement from "./pages/HostManagement";
 import HostApplication from "./pages/HostApplication";
-import HostDashboard from "./pages/HostDashboard";
-import Hosts from "./pages/Hosts";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 
@@ -43,7 +42,6 @@ const App = () => (
             <Route path="/experiences/:id" element={<TourDetail />} />
             <Route path="/tours" element={<Tours />} />
             <Route path="/tours/:id" element={<TourDetail />} />
-            <Route path="/hosts" element={<Hosts />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Login />} />
@@ -108,6 +106,14 @@ const App = () => (
               }
             />
             <Route
+              path="/admin/hosts"
+              element={
+                <ProtectedRoute>
+                  <HostManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/my-bookings"
               element={
                 <ProtectedRoute>
@@ -128,14 +134,6 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <HostApplication />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/host/dashboard"
-              element={
-                <ProtectedRoute>
-                  <HostDashboard />
                 </ProtectedRoute>
               }
             />
