@@ -159,16 +159,20 @@ export const hostApplicationAPI = {
     const response = await api.patch("/host-applications/media", { media });
     return response.data;
   },
-  initiateFaydaOTP: async (fcn: string) => {
-    const response = await api.post("/host-applications/fayda/initiate-otp", { fcn });
-    return response.data;
-  },
-  verifyFaydaOTP: async (otp: string) => {
-    const response = await api.post("/host-applications/fayda/verify-otp", { otp });
+  uploadMedia: async (formData: FormData) => {
+    const response = await api.post("/host-applications/upload-media", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
     return response.data;
   },
   submitApplication: async () => {
     const response = await api.post("/host-applications/submit");
+    return response.data;
+  },
+  reapplyApplication: async () => {
+    const response = await api.post("/host-applications/reapply");
     return response.data;
   },
   getMyApplication: async () => {
@@ -369,6 +373,22 @@ export const bookingsAPI = {
   },
   getMyBookings: async () => {
     const response = await api.get("/bookings/me");
+    return response.data;
+  },
+  getHostBookings: async () => {
+    const response = await api.get("/bookings/host/bookings");
+    return response.data;
+  },
+};
+
+// Hosts API
+export const hostsAPI = {
+  getAll: async () => {
+    const response = await api.get("/hosts");
+    return response.data;
+  },
+  getOne: async (id: string) => {
+    const response = await api.get(`/hosts/${id}`);
     return response.data;
   },
 };

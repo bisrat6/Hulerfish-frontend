@@ -403,7 +403,7 @@ const UserManagement = () => {
                         </div>
                         {userData.hostStatus && (
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Host:</span>
+                            <span className="text-muted-foreground">Host Status:</span>
                             <span
                               className={`font-semibold capitalize ${
                                 userData.hostStatus === "approved"
@@ -420,58 +420,6 @@ const UserManagement = () => {
                           </div>
                         )}
                       </div>
-                      
-                      {/* Host Approval Actions */}
-                      {userData.hostStatus === "pending" && (
-                        <div className="mt-4 pt-4 border-t flex gap-2">
-                          <Button
-                            variant="hero"
-                            size="sm"
-                            onClick={async () => {
-                              try {
-                                await usersAPI.approveHost(userData._id ?? userData.id);
-                                toast({
-                                  title: "Host Approved",
-                                  description: `${userData.name} can now create experiences`,
-                                });
-                                fetchUsers();
-                              } catch (err: any) {
-                                toast({
-                                  title: "Error",
-                                  description: err.response?.data?.message || "Failed to approve host",
-                                  variant: "destructive",
-                                });
-                              }
-                            }}
-                            className="flex-1"
-                          >
-                            Approve
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={async () => {
-                              try {
-                                await usersAPI.rejectHost(userData._id ?? userData.id);
-                                toast({
-                                  title: "Host Rejected",
-                                  description: `Application rejected for ${userData.name}`,
-                                });
-                                fetchUsers();
-                              } catch (err: any) {
-                                toast({
-                                  title: "Error",
-                                  description: err.response?.data?.message || "Failed to reject host",
-                                  variant: "destructive",
-                                });
-                              }
-                            }}
-                            className="flex-1"
-                          >
-                            Reject
-                          </Button>
-                        </div>
-                      )}
                     </CardContent>
                   </Card>
                 </motion.div>

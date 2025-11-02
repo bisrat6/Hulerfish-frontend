@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { hostApplicationAPI } from "@/lib/api";
@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import { Loader2, User, Coffee, Upload, CheckCircle, ArrowRight, ArrowLeft, Globe } from "lucide-react";
+import { Loader2, User, Coffee, Upload, CheckCircle, ArrowRight, ArrowLeft, AlertCircle } from "lucide-react";
 
 const steps = [
   { id: 1, name: "Personal Info", icon: User },
@@ -25,7 +25,6 @@ const languages = ["Amharic", "English", "Oromiffa", "Tigrinya", "French", "Arab
 export default function HostApplication() {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -49,16 +48,40 @@ export default function HostApplication() {
   });
 
   const [media, setMedia] = useState({
-    profilePhoto: "",
-    identificationPhoto: "",
-    additionalPhotos: [] as string[],
-    documents: [] as string[],
+    nationalIdFront: "",
+    nationalIdBack: "",
+    personalPhoto: "",
+    hostingEnvironmentPhotos: [] as string[],
   });
 
-  const [faydaAuth, setFaydaAuth] = useState<any>(null);
-  const [fcn, setFcn] = useState("");
-  const [otp, setOtp] = useState("");
-  const [otpInitiated, setOtpInitiated] = useState(false);
+  // File upload state
+  const [selectedFiles, setSelectedFiles] = useState<{
+    nationalIdFront: File | null;
+    nationalIdBack: File | null;
+    personalPhoto: File | null;
+    hostingEnvironmentPhotos: File[];
+  }>({
+    nationalIdFront: null,
+    nationalIdBack: null,
+    personalPhoto: null,
+    hostingEnvironmentPhotos: [],
+  });
+
+  const [filePreviews, setFilePreviews] = useState<{
+    nationalIdFront: string | null;
+    nationalIdBack: string | null;
+    personalPhoto: string | null;
+    hostingEnvironmentPhotos: string[];
+  }>({
+    nationalIdFront: null,
+    nationalIdBack: null,
+    personalPhoto: null,
+    hostingEnvironmentPhotos: [],
+  });
+
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+  const [applicationStatus, setApplicationStatus] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -75,16 +98,8 @@ export default function HostApplication() {
       return;
     }
 
-    // Check URL params for Fayda callback
-    const step = searchParams.get("step");
-    const status = searchParams.get("status");
-    if (step === "4" && status === "success") {
-      setCurrentStep(4);
-      fetchApplication();
-    } else {
-      fetchApplication();
-    }
-  }, [isAuthenticated, user, navigate, searchParams, toast]);
+    fetchApplication();
+  }, [isAuthenticated, user, navigate, toast]);
 
   const fetchApplication = async () => {
     try {
@@ -92,12 +107,15 @@ export default function HostApplication() {
       const response = await hostApplicationAPI.getMyApplication();
       if (response.data?.application) {
         const app = response.data.application;
+        setApplicationStatus(app.status);
+        
         if (app.personalInfo) setPersonalInfo({ ...personalInfo, ...app.personalInfo });
         if (app.experienceDetails) setExperienceDetails({ ...experienceDetails, ...app.experienceDetails });
         if (app.media) setMedia({ ...media, ...app.media });
-        if (app.faydaAuth) setFaydaAuth(app.faydaAuth);
-        if (app.status === "pending" || app.status === "approved") {
-          navigate("/profile");
+        
+        // If application is pending, show final step (review) in read-only mode
+        if (app.status === "pending") {
+          setCurrentStep(4);
         }
       }
     } catch (error: any) {
@@ -148,25 +166,113 @@ export default function HostApplication() {
         setIsLoading(false);
       }
     } else if (currentStep === 3) {
-      try {
-        setIsLoading(true);
-        await hostApplicationAPI.updateMedia(media);
-        setCurrentStep(4);
-      } catch (error: any) {
-        toast({
-          title: "Error",
-          description: error.message || "Failed to save media.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
+      // Media step - user can skip or upload files directly
+      setCurrentStep(4);
     }
   };
 
   const handleBack = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+    }
+  };
+
+  // Handle file selection
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: string) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    if (fieldName === 'nationalIdFront' || fieldName === 'nationalIdBack' || fieldName === 'personalPhoto') {
+      const file = files[0];
+      setSelectedFiles({ ...selectedFiles, [fieldName]: file });
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFilePreviews({ ...filePreviews, [fieldName]: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    } else if (fieldName === 'hostingEnvironmentPhotos') {
+      const fileArray = Array.from(files).slice(0, 5); // Max 5 files
+      setSelectedFiles({ ...selectedFiles, hostingEnvironmentPhotos: fileArray });
+      
+      // Create previews
+      const previews: string[] = [];
+      fileArray.forEach((file) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          previews.push(reader.result as string);
+          if (previews.length === fileArray.length) {
+            setFilePreviews({ ...filePreviews, hostingEnvironmentPhotos: previews });
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+
+  // Upload files to server
+  const handleUploadFiles = async () => {
+    const formData = new FormData();
+    
+    if (selectedFiles.nationalIdFront) {
+      formData.append('nationalIdFront', selectedFiles.nationalIdFront);
+    }
+    if (selectedFiles.nationalIdBack) {
+      formData.append('nationalIdBack', selectedFiles.nationalIdBack);
+    }
+    if (selectedFiles.personalPhoto) {
+      formData.append('personalPhoto', selectedFiles.personalPhoto);
+    }
+    selectedFiles.hostingEnvironmentPhotos.forEach((file) => {
+      formData.append('hostingEnvironmentPhotos', file);
+    });
+
+    try {
+      setIsUploading(true);
+      setUploadProgress(0);
+      
+      const response = await hostApplicationAPI.uploadMedia(formData);
+      
+      setUploadProgress(100);
+      
+      // Update media state with uploaded URLs
+      const uploadedFiles = response.data.uploadedFiles;
+      setMedia({
+        nationalIdFront: uploadedFiles.nationalIdFront || media.nationalIdFront,
+        nationalIdBack: uploadedFiles.nationalIdBack || media.nationalIdBack,
+        personalPhoto: uploadedFiles.personalPhoto || media.personalPhoto,
+        hostingEnvironmentPhotos: [...media.hostingEnvironmentPhotos, ...uploadedFiles.hostingEnvironmentPhotos],
+      });
+      
+      toast({
+        title: "Upload successful!",
+        description: "Your files have been uploaded successfully.",
+      });
+      
+      // Clear selected files and previews
+      setSelectedFiles({
+        nationalIdFront: null,
+        nationalIdBack: null,
+        personalPhoto: null,
+        hostingEnvironmentPhotos: [],
+      });
+      setFilePreviews({
+        nationalIdFront: null,
+        nationalIdBack: null,
+        personalPhoto: null,
+        hostingEnvironmentPhotos: [],
+      });
+      
+    } catch (error: any) {
+      toast({
+        title: "Upload failed",
+        description: error.response?.data?.message || "Failed to upload files. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -243,6 +349,80 @@ export default function HostApplication() {
             </div>
           </div>
 
+          {/* Application Status Banner */}
+          {applicationStatus === "pending" && (
+            <div className="mb-6 bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">
+              <div className="flex items-center gap-3">
+                <CheckCircle className="w-6 h-6 text-yellow-600" />
+                <div>
+                  <h3 className="font-semibold text-yellow-900">Application Under Review</h3>
+                  <p className="text-sm text-yellow-800">
+                    Your host application has been submitted and is currently being reviewed by our team. 
+                    We'll notify you once a decision is made.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {applicationStatus === "rejected" && (
+            <div className="mb-6 bg-red-50 border-2 border-red-200 rounded-lg p-4">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="w-6 h-6 text-red-600" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-red-900">Application Rejected</h3>
+                  <p className="text-sm text-red-800 mb-3">
+                    Unfortunately, your host application was not approved at this time. 
+                    You can update your information and reapply.
+                  </p>
+                  <Button
+                    onClick={async () => {
+                      try {
+                        await hostApplicationAPI.reapplyApplication();
+                        toast({
+                          title: "Ready to Reapply",
+                          description: "You can now update your application and submit again.",
+                        });
+                        setApplicationStatus("draft");
+                        setCurrentStep(1);
+                        
+                        // Clear media state (user needs to re-upload)
+                        setMedia({
+                          nationalIdFront: "",
+                          nationalIdBack: "",
+                          personalPhoto: "",
+                          hostingEnvironmentPhotos: [],
+                        });
+                        setSelectedFiles({
+                          nationalIdFront: null,
+                          nationalIdBack: null,
+                          personalPhoto: null,
+                          hostingEnvironmentPhotos: [],
+                        });
+                        setFilePreviews({
+                          nationalIdFront: null,
+                          nationalIdBack: null,
+                          personalPhoto: null,
+                          hostingEnvironmentPhotos: [],
+                        });
+                      } catch (error: any) {
+                        toast({
+                          title: "Error",
+                          description: error.response?.data?.message || "Failed to reset application",
+                          variant: "destructive",
+                        });
+                      }
+                    }}
+                    variant="destructive"
+                    size="sm"
+                  >
+                    Reapply Now
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Form Content */}
           <AnimatePresence mode="wait">
             <motion.div
@@ -264,7 +444,7 @@ export default function HostApplication() {
                     {currentStep === 1 && "Please provide your personal information"}
                     {currentStep === 2 && "Tell us about your experience"}
                     {currentStep === 3 && "Upload photos and documents"}
-                    {currentStep === 4 && "Review your application before submitting"}
+                    {currentStep === 4 && applicationStatus === "pending" ? "Application submitted and under review" : "Review your application before submitting"}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -372,10 +552,137 @@ export default function HostApplication() {
                   {/* Step 3: Media Upload */}
                   {currentStep === 3 && (
                     <div className="space-y-4">
-                      <p className="text-sm text-muted-foreground">
-                        Media upload functionality will be implemented with file storage.
-                        For now, you can proceed to Fayda authentication.
-                      </p>
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <p className="text-sm text-blue-900">
+                          Upload required documents: front and back of your National ID, a personal photo, and photos of your hosting environment (max 5MB per file).
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="nationalIdFront">National ID - Front Side *</Label>
+                          <Input
+                            id="nationalIdFront"
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleFileChange(e, 'nationalIdFront')}
+                            className="cursor-pointer"
+                          />
+                          {filePreviews.nationalIdFront && (
+                            <div className="mt-2">
+                              <img 
+                                src={filePreviews.nationalIdFront} 
+                                alt="National ID Front preview" 
+                                className="w-full h-32 object-cover rounded-lg border"
+                              />
+                            </div>
+                          )}
+                          {media.nationalIdFront && !filePreviews.nationalIdFront && (
+                            <div className="mt-2 text-sm text-green-600">
+                              ✓ Front uploaded
+                            </div>
+                          )}
+                        </div>
+
+                        <div>
+                          <Label htmlFor="nationalIdBack">National ID - Back Side *</Label>
+                          <Input
+                            id="nationalIdBack"
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleFileChange(e, 'nationalIdBack')}
+                            className="cursor-pointer"
+                          />
+                          {filePreviews.nationalIdBack && (
+                            <div className="mt-2">
+                              <img 
+                                src={filePreviews.nationalIdBack} 
+                                alt="National ID Back preview" 
+                                className="w-full h-32 object-cover rounded-lg border"
+                              />
+                            </div>
+                          )}
+                          {media.nationalIdBack && !filePreviews.nationalIdBack && (
+                            <div className="mt-2 text-sm text-green-600">
+                              ✓ Back uploaded
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="personalPhoto">Personal Photo *</Label>
+                        <Input
+                          id="personalPhoto"
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleFileChange(e, 'personalPhoto')}
+                          className="cursor-pointer"
+                        />
+                        {filePreviews.personalPhoto && (
+                          <div className="mt-2">
+                            <img 
+                              src={filePreviews.personalPhoto} 
+                              alt="Personal photo preview" 
+                              className="w-32 h-32 object-cover rounded-lg border"
+                            />
+                          </div>
+                        )}
+                        {media.personalPhoto && !filePreviews.personalPhoto && (
+                          <div className="mt-2 text-sm text-green-600">
+                            ✓ Personal photo uploaded
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <Label htmlFor="hostingEnvironmentPhotos">Hosting Environment Photos (max 5) *</Label>
+                        <Input
+                          id="hostingEnvironmentPhotos"
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={(e) => handleFileChange(e, 'hostingEnvironmentPhotos')}
+                          className="cursor-pointer"
+                        />
+                        {filePreviews.hostingEnvironmentPhotos.length > 0 && (
+                          <div className="mt-2 grid grid-cols-4 gap-2">
+                            {filePreviews.hostingEnvironmentPhotos.map((preview, index) => (
+                              <img 
+                                key={index}
+                                src={preview} 
+                                alt={`Environment ${index + 1}`} 
+                                className="w-20 h-20 object-cover rounded-lg border"
+                              />
+                            ))}
+                          </div>
+                        )}
+                        {media.hostingEnvironmentPhotos.length > 0 && filePreviews.hostingEnvironmentPhotos.length === 0 && (
+                          <div className="mt-2 text-sm text-green-600">
+                            ✓ {media.hostingEnvironmentPhotos.length} environment photos uploaded
+                          </div>
+                        )}
+                      </div>
+
+                      {(selectedFiles.nationalIdFront || selectedFiles.nationalIdBack || selectedFiles.personalPhoto || 
+                        selectedFiles.hostingEnvironmentPhotos.length > 0) && (
+                        <div className="pt-4">
+                          <Button
+                            onClick={handleUploadFiles}
+                            disabled={isUploading}
+                            className="w-full"
+                          >
+                            {isUploading ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Uploading... {uploadProgress}%
+                              </>
+                            ) : (
+                              "Upload Files"
+                            )}
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -392,35 +699,39 @@ export default function HostApplication() {
                           <p><strong>Languages:</strong> {personalInfo.languagesSpoken.join(", ")}</p>
                         </div>
                       </div>
-                      <div>
-                        <h3 className="font-semibold mb-2">Fayda Verification</h3>
-                        {faydaAuth?.verified ? (
-                          <div className="flex items-center gap-2 text-green-600">
-                            <CheckCircle className="w-5 h-5" />
-                            <span>Verified</span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2 text-yellow-600">
-                            <Globe className="w-5 h-5" />
-                            <span>Pending verification</span>
-                          </div>
-                        )}
-                      </div>
-                      {!faydaAuth?.verified && (
-                        <Button
-                          onClick={() => {
-                            hostApplicationAPI.initiateFaydaAuth().then((response) => {
-                              if (response.data?.authUrl) {
-                                window.location.href = response.data.authUrl;
-                              }
-                            });
-                          }}
-                          variant="outline"
-                          className="w-full"
-                        >
-                          Verify with Fayda
-                        </Button>
+                      
+                      {experienceDetails.previousExperience && (
+                        <div>
+                          <h3 className="font-semibold mb-2">Experience Details</h3>
+                          <p className="text-sm text-muted-foreground">{experienceDetails.previousExperience}</p>
+                        </div>
                       )}
+
+                      <div>
+                        <h3 className="font-semibold mb-2">Uploaded Documents</h3>
+                        <div className="text-sm space-y-1 text-muted-foreground">
+                          {media.nationalIdFront ? (
+                            <p className="text-green-600">✓ National ID (Front) uploaded</p>
+                          ) : (
+                            <p className="text-red-600">✗ National ID (Front) required</p>
+                          )}
+                          {media.nationalIdBack ? (
+                            <p className="text-green-600">✓ National ID (Back) uploaded</p>
+                          ) : (
+                            <p className="text-red-600">✗ National ID (Back) required</p>
+                          )}
+                          {media.personalPhoto ? (
+                            <p className="text-green-600">✓ Personal photo uploaded</p>
+                          ) : (
+                            <p className="text-red-600">✗ Personal photo required</p>
+                          )}
+                          {media.hostingEnvironmentPhotos.length > 0 ? (
+                            <p className="text-green-600">✓ {media.hostingEnvironmentPhotos.length} environment photos uploaded</p>
+                          ) : (
+                            <p className="text-red-600">✗ At least 1 environment photo required</p>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   )}
 
@@ -445,10 +756,18 @@ export default function HostApplication() {
                         Continue
                         <ArrowRight className="w-4 h-4 ml-2" />
                       </Button>
+                    ) : applicationStatus === "pending" ? (
+                      <Button
+                        onClick={() => navigate("/profile")}
+                        variant="outline"
+                        className="w-full sm:w-auto"
+                      >
+                        Back to Profile
+                      </Button>
                     ) : (
                       <Button
                         onClick={handleSubmit}
-                        disabled={isSubmitting || !faydaAuth?.verified}
+                        disabled={isSubmitting || !media.nationalIdFront || !media.nationalIdBack || !media.personalPhoto || media.hostingEnvironmentPhotos.length === 0}
                         className="w-full sm:w-auto"
                       >
                         {isSubmitting ? (
@@ -468,4 +787,3 @@ export default function HostApplication() {
     </div>
   );
 }
-

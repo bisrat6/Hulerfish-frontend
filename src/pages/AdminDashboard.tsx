@@ -280,7 +280,7 @@ const AdminDashboard = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <Button
                       variant="hero"
                       size="lg"
@@ -296,6 +296,15 @@ const AdminDashboard = () => {
                       className="w-full"
                     >
                       Manage Users
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      onClick={() => navigate("/admin/host-applications")}
+                      className="w-full"
+                    >
+                      <UserCheck className="w-4 h-4 mr-2" />
+                      Host Applications
                     </Button>
                     <Button
                       variant="outline"

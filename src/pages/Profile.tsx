@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
-import { User, Mail, LogOut, Edit, Save, X } from "lucide-react";
+import { User, Mail, LogOut, Edit, Save, X, BarChart3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usersAPI } from "@/lib/api";
 
@@ -195,37 +195,6 @@ const Profile = () => {
                       Change Password
                     </Button>
 
-                    {/* Host Application Section */}
-                    {user?.role !== "admin" && (user as any)?.hostStatus !== "approved" && (
-                      <div className="pt-4 border-t">
-                        <Button
-                          variant="hero"
-                          size="lg"
-                          onClick={async () => {
-                            try {
-                              await usersAPI.applyForHost();
-                              toast({
-                                title: "Application Submitted",
-                                description: "Your host application has been submitted for review!",
-                              });
-                              // Refresh user data
-                              const userData = await usersAPI.getMe();
-                              updateUser(userData.data.data);
-                            } catch (error: any) {
-                              toast({
-                                title: "Error",
-                                description: error.response?.data?.message || "Failed to submit application",
-                                variant: "destructive",
-                              });
-                            }
-                          }}
-                          className="w-full"
-                        >
-                          Apply to Become a Host
-                        </Button>
-                      </div>
-                    )}
-
                     {/* Admin Only Links */}
                     {user?.role === "admin" && (
                       <>
@@ -240,23 +209,7 @@ const Profile = () => {
                           onClick={() => navigate("/admin/dashboard")}
                           className="w-full"
                         >
-                          Dashboard
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="lg"
-                          onClick={() => navigate("/admin/experiences")}
-                          className="w-full"
-                        >
-                          Manage Experiences
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="lg"
-                          onClick={() => navigate("/admin/users")}
-                          className="w-full"
-                        >
-                          Manage Users
+                          Admin Dashboard
                         </Button>
                       </>
                     )}
@@ -294,10 +247,11 @@ const Profile = () => {
                         <Button
                           variant="hero"
                           size="lg"
-                          onClick={() => navigate("/admin/experiences")}
+                          onClick={() => navigate("/host/dashboard")}
                           className="w-full"
                         >
-                          Manage My Experiences
+                          <BarChart3 className="w-4 h-4 mr-2" />
+                          Host Dashboard
                         </Button>
                       </>
                     )}
