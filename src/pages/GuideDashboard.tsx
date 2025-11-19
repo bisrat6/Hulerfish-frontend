@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import PageHeader from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -111,25 +112,15 @@ export default function GuideDashboard() {
 
       <main className="flex-1 pt-16">
         {/* Header */}
-        <section className="relative bg-gradient-to-br from-primary via-primary-light to-earth py-24 text-primary-foreground">
-          <div className="absolute inset-0 pattern-ethiopian opacity-10" />
-          <div className="container mx-auto px-4 relative z-10">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="max-w-3xl"
-            >
-              <h1 className="font-display text-5xl md:text-6xl font-bold mb-6 flex items-center gap-4">
-                <User className="w-12 h-12" />
-                Guide Dashboard
-              </h1>
-              <p className="text-lg text-primary-foreground/90">
-                View and manage your assigned hosts
-              </p>
-            </motion.div>
-          </div>
-        </section>
+        <PageHeader
+          title={
+            <>
+              <User className="w-10 h-10 inline-block mr-3 text-primary" />
+              Guide Dashboard
+            </>
+          }
+          description="View and manage your assigned hosts"
+        />
 
         {/* Hosts List */}
         <section className="py-16">

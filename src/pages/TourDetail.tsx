@@ -6,6 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import {
   Calendar,
   Users,
@@ -17,6 +25,8 @@ import {
   Loader2,
   MessageSquare,
   Check,
+  Plus,
+  Minus,
 } from "lucide-react";
 import { experiencesAPI, reviewsAPI, bookingsAPI, API_ORIGIN } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
@@ -34,9 +44,10 @@ const TourDetail = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [reviewPage, setReviewPage] = useState(1);
-  const [reviewLimit, setReviewLimit] = useState(50);
+  const [reviewLimit, setReviewLimit] = useState(10); // Reduced from 50 to 10 for faster loading
   const [reviewSort, setReviewSort] = useState("-createdAt");
   const [showAllReviews, setShowAllReviews] = useState(false);
+  const [totalReviews, setTotalReviews] = useState(0);
   const [numGuests, setNumGuests] = useState<number>(1);
   const [availability, setAvailability] = useState<{available: number; booked: number; maxGuests: number} | null>(null);
   const [newReview, setNewReview] = useState("");
@@ -44,6 +55,7 @@ const TourDetail = () => {
   const [submittingReview, setSubmittingReview] = useState(false);
   const [hasUserReviewed, setHasUserReviewed] = useState(false);
   const [hasBooked, setHasBooked] = useState<boolean>(false);
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -101,7 +113,7 @@ const TourDetail = () => {
     checkBooking();
   }, [experience, isAuthenticated, user]);
 
-  const fetchReviews = async () => {
+  const fetchReviews = async (append = false) => {
     if (!id) return;
     setReviewsLoading(true);
     try {
@@ -110,11 +122,26 @@ const TourDetail = () => {
         limit: reviewLimit,
         sort: reviewSort,
       });
-      setReviews(response.data.data);
+      
+      // Store total count if available
+      if (response?.results !== undefined) {
+        setTotalReviews(response.results);
+      } else if (response?.data?.results !== undefined) {
+        setTotalReviews(response.data.results);
+      }
+      
+      const newReviews = response.data?.data || response.data || [];
+      
+      // Append reviews if loading more, otherwise replace
+      if (append && reviewPage > 1) {
+        setReviews((prev) => [...prev, ...newReviews]);
+      } else {
+        setReviews(newReviews);
+      }
 
       // Check if current user has already reviewed this experience
       if (user && isAuthenticated) {
-        const userReview = response.data.data.find((review: any) => {
+        const userReview = newReviews.find((review: any) => {
           // Handle both populated and non-populated user references
           const reviewUserId =
             review.user?._id ?? review.user?.id ?? review.user;
@@ -138,9 +165,19 @@ const TourDetail = () => {
   };
 
   useEffect(() => {
-    fetchReviews();
+    // Reset to page 1 and fetch when id or filters change
+    setReviewPage(1);
+    fetchReviews(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, toast, user, isAuthenticated, reviewPage, reviewLimit, reviewSort]);
+  }, [id, reviewLimit, reviewSort]);
+
+  useEffect(() => {
+    // Fetch more reviews when page changes (for pagination)
+    if (reviewPage > 1) {
+      fetchReviews(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reviewPage]);
 
   useEffect(() => {
     const loadAvailability = async () => {
@@ -223,6 +260,7 @@ const TourDetail = () => {
       setNewReview("");
       setNewRating(0);
       setHasUserReviewed(true);
+      setReviewModalOpen(false);
       toast({
         title: "Success",
         description: "Review submitted successfully",
@@ -254,36 +292,13 @@ const TourDetail = () => {
       <Navigation />
 
       <main className="flex-1 pt-16">
-        {/* Hero Image (background only) */}
-        <section className="relative h-[60vh] overflow-hidden">
-          <div
-            className="w-full h-full bg-center bg-cover"
-            style={{
-              backgroundImage: `url(${
-                experience.imageCover && String(experience.imageCover).startsWith("/")
-                  ? `${API_ORIGIN}${experience.imageCover}`
-                  : experience.imageCover ||
-                    `https://placehold.co/1200x800/2d5a3d/ffd700?text=${encodeURIComponent(
-                      experience.title
-                    )}`
-              })`,
-            }}
-          />
-          <div className="absolute inset-0">
-            {/* subtle dark scrim for contrast */}
-            <div className="absolute inset-0 bg-black/25" />
-            {/* site color gradient for branding: green -> yellow */}
-            <div className="absolute inset-0 bg-gradient-to-t from-emerald-400/30 via-amber-300/20 to-transparent" />
-            {/* gentle backdrop blend to tie into site background */}
-            <div className="absolute inset-0 bg-gradient-to-r from-background/60 to-transparent mix-blend-multiply" />
-          </div>
-
-          <div className="absolute top-4 left-4">
+        {/* Title & Quick Info */}
+        <section className="container mx-auto px-4 py-8">
+          <div className="mb-4">
             <Button
               asChild
               variant="outline"
               size="sm"
-              className="bg-background/60 backdrop-blur-sm"
             >
               <Link to="/experiences">
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -291,11 +306,7 @@ const TourDetail = () => {
               </Link>
             </Button>
           </div>
-        </section>
-
-        {/* Title & Quick Info (moved below the image) */}
-        <section className="container mx-auto px-4 -mt-12 z-10">
-          <div className="bg-background/90 backdrop-blur-sm rounded-lg p-6 shadow-md">
+          <div className="bg-gradient-to-br from-background via-background to-primary/10 rounded-lg p-6 shadow-md border">
             <div className="flex flex-wrap items-center gap-3 mb-4">
               <Badge
                 variant="outline"
@@ -318,7 +329,7 @@ const TourDetail = () => {
               )}
             </div>
 
-            <h1 className="font-display text-3xl md:text-5xl font-bold text-foreground mb-0">
+            <h1 className="font-display text-2xl md:text-4xl font-bold text-foreground mb-0">
               {experience.title}
             </h1>
           </div>
@@ -332,13 +343,13 @@ const TourDetail = () => {
               <div className="lg:col-span-2 space-y-8">
                 {/* Overview */}
                 <div className="animate-fade-in">
-                  <h2 className="font-display text-3xl font-bold text-foreground mb-4">
+                  <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4">
                     Overview
                   </h2>
-                  <p className="text-lg text-muted-foreground leading-relaxed mb-6">
+                  <p className="text-base md:text-lg text-muted-foreground leading-relaxed mb-6">
                     {experience.summary}
                   </p>
-                  <p className="text-muted-foreground leading-relaxed">
+                  <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
                     {experience.description}
                   </p>
                 </div>
@@ -346,7 +357,7 @@ const TourDetail = () => {
                 {/* Quick Facts */}
                 <Card className="border-2">
                   <CardContent className="p-6">
-                    <h3 className="font-display text-2xl font-bold text-foreground mb-6">
+                    <h3 className="font-display text-xl md:text-2xl font-bold text-foreground mb-6">
                       Quick Facts
                     </h3>
                     <div className="grid grid-cols-2 gap-6">
@@ -400,7 +411,7 @@ const TourDetail = () => {
 
                 {/* Images Grid */}
                 <div>
-                  <h3 className="font-display text-2xl font-bold text-foreground mb-6">
+                  <h3 className="font-display text-xl md:text-2xl font-bold text-foreground mb-6">
                     Gallery
                   </h3>
                   <div className="grid grid-cols-3 gap-4">
@@ -432,53 +443,24 @@ const TourDetail = () => {
 
                 {/* Reviews Section */}
                 <div>
-                  <h3 className="font-display text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
-                    <MessageSquare className="w-6 h-6" />
-                    Reviews ({reviews.length})
+                  <h3 className="font-display text-xl md:text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
+                    <MessageSquare className="w-5 h-5 md:w-6 md:h-6" />
+                    Reviews {totalReviews > 0 && `(${totalReviews})`}
                   </h3>
 
-                  {/* Add Review Form */}
+                  {/* Rate & Review Button */}
                   {isAuthenticated && !hasUserReviewed && (
-                    <Card className="mb-6 border-2">
-                      <CardHeader>
-                        <CardTitle>Write a Review</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div>
-                          <label className="text-sm font-medium">Rating</label>
-                          <div className="flex gap-1 mt-1">
-                            {Array.from({ length: 5 }).map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`w-6 h-6 cursor-pointer ${
-                                  i < newRating
-                                    ? "text-secondary fill-secondary"
-                                    : "text-muted"
-                                }`}
-                                onClick={() => setNewRating(i + 1)}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium">Review</label>
-                          <Textarea
-                            value={newReview}
-                            onChange={(e) => setNewReview(e.target.value)}
-                            placeholder="Share your experience..."
-                            className="mt-1"
-                            rows={4}
-                          />
-                        </div>
-                        <Button
-                          onClick={handleSubmitReview}
-                          disabled={submittingReview}
-                          variant="hero"
-                        >
-                          {submittingReview ? "Submitting..." : "Submit Review"}
-                        </Button>
-                      </CardContent>
-                    </Card>
+                    <div className="mb-6">
+                      <Button
+                        variant="hero"
+                        size="lg"
+                        onClick={() => setReviewModalOpen(true)}
+                        className="w-full sm:w-auto"
+                      >
+                        <Star className="w-5 h-5 mr-2" />
+                        Rate & Review
+                      </Button>
+                    </div>
                   )}
 
                   {/* Already Reviewed Message */}
@@ -496,7 +478,7 @@ const TourDetail = () => {
                   )}
 
                   {/* Reviews List */}
-                  {reviewsLoading ? (
+                  {reviewsLoading && reviews.length === 0 ? (
                     <div className="flex justify-center py-8">
                       <Loader2 className="w-8 h-8 animate-spin text-primary" />
                     </div>
@@ -509,42 +491,60 @@ const TourDetail = () => {
                       </CardContent>
                     </Card>
                   ) : (
-                    <div className="space-y-4">
-                      {(showAllReviews ? reviews : reviews.slice(0, 3)).map((review) => (
-                        <Card
-                          key={review._id ?? review.id}
-                          className="border-2"
-                        >
-                          <CardContent className="p-6">
-                            <div className="flex items-start justify-between mb-3">
-                              <div>
-                                <h4 className="font-semibold">
-                                  {review.user?.name || "Anonymous"}
-                                </h4>
-                                <div className="flex items-center gap-2 mt-1">
-                                  {renderStars(review.rating)}
-                                  <span className="text-sm text-muted-foreground">
-                                    {new Date(
-                                      review.createdAt
-                                    ).toLocaleDateString()}
-                                  </span>
+                    <>
+                      <div className="space-y-4">
+                        {reviews.map((review: any) => (
+                          <Card
+                            key={review._id ?? review.id ?? Math.random()}
+                            className="border-2"
+                          >
+                            <CardContent className="p-6">
+                              <div className="flex items-start justify-between mb-3">
+                                <div>
+                                  <h4 className="font-semibold">
+                                    {review.user?.name || "Anonymous"}
+                                  </h4>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    {renderStars(Number(review.rating) || 0)}
+                                    <span className="text-sm text-muted-foreground">
+                                      {new Date(
+                                        String(review.createdAt)
+                                      ).toLocaleDateString()}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                            <p className="text-muted-foreground">
-                              {review.review}
-                            </p>
-                          </CardContent>
-                        </Card>
-                      ))}
+                              <p className="text-muted-foreground">
+                                {String(review.review || "")}
+                              </p>
+                            </CardContent>
+                          </Card>
+                        ))}
                       </div>
-                  )}
-                  {reviews.length > 3 && (
-                    <div className="mt-4">
-                      <Button variant="outline" size="sm" onClick={() => setShowAllReviews((v) => !v)}>
-                        {showAllReviews ? 'Show less' : 'Show more'}
-                      </Button>
-                    </div>
+                      {/* Load More Button */}
+                      {totalReviews > reviews.length && (
+                        <div className="mt-6 text-center">
+                          <Button
+                            variant="outline"
+                            size="lg"
+                            onClick={() => setReviewPage((prev) => prev + 1)}
+                            disabled={reviewsLoading}
+                            className="w-full sm:w-auto"
+                          >
+                            {reviewsLoading ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Loading...
+                              </>
+                            ) : (
+                              <>
+                                Load More ({reviews.length} of {totalReviews})
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
@@ -554,56 +554,120 @@ const TourDetail = () => {
                 <Card className="sticky top-24 border-2 shadow-xl">
                   <CardContent className="p-6">
                     <div className="text-center mb-6">
-                      <p className="text-sm text-muted-foreground mb-2">
+                      <p className="text-xs md:text-sm text-muted-foreground mb-2">
                         Price per person
                       </p>
-                      <p className="text-5xl font-bold text-primary">
+                      <p className="text-3xl md:text-5xl font-bold text-primary">
                         ETB {experience.price}
                       </p>
                     </div>
 
                     <div className="mb-6">
-                      <label className="text-sm font-medium">Number of Guests</label>
-                      <div className="mt-2 flex items-center gap-2">
-                        <input
-                          type="number"
-                          min={1}
-                          max={Math.max(1, Number(experience.maxGuests) || 1)}
-                          value={numGuests}
-                          onChange={(e) => setNumGuests(Math.max(1, Math.min(Number(e.target.value || 1), Number(experience.maxGuests) || 1)))}
-                          className="w-24 border rounded px-2 py-2"
-                        />
-                        <span className="text-sm text-muted-foreground">Max {experience.maxGuests}</span>
+                      <label className="text-sm font-medium mb-3 block">Number of Guests</label>
+                      <div className="flex items-center gap-3 mb-3">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="h-10 w-10 shrink-0"
+                          onClick={() => {
+                            const maxAvailable = (availability?.available ?? Number(experience.maxGuests)) || 1;
+                            const maxAllowed = Math.min(Number(experience.maxGuests) || 1, maxAvailable);
+                            setNumGuests(Math.max(1, numGuests - 1));
+                          }}
+                          disabled={numGuests <= 1}
+                        >
+                          <Minus className="w-4 h-4" />
+                        </Button>
+                        <div className="flex-1 flex items-center justify-center border border-border rounded-md bg-background/50">
+                          <input
+                            type="number"
+                            min={1}
+                            max={Math.max(1, Number(experience.maxGuests) || 1)}
+                            value={numGuests}
+                            onChange={(e) => {
+                              const value = Number(e.target.value) || 1;
+                              const maxAvailable = (availability?.available ?? Number(experience.maxGuests)) || 1;
+                              const maxAllowed = Math.min(Number(experience.maxGuests) || 1, maxAvailable);
+                              setNumGuests(Math.max(1, Math.min(value, maxAllowed)));
+                            }}
+                            className="w-full h-10 text-center text-lg font-semibold border-0 focus:outline-none focus:ring-2 focus:ring-primary rounded-md bg-transparent"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="h-10 w-10 shrink-0"
+                          onClick={() => {
+                            const maxAvailable = (availability?.available ?? Number(experience.maxGuests)) || 1;
+                            const maxAllowed = Math.min(Number(experience.maxGuests) || 1, maxAvailable);
+                            setNumGuests(Math.min(maxAllowed, numGuests + 1));
+                          }}
+                          disabled={(() => {
+                            const maxAvailable = (availability?.available ?? Number(experience.maxGuests)) || 1;
+                            const maxAllowed = Math.min(Number(experience.maxGuests) || 1, maxAvailable);
+                            return numGuests >= maxAllowed;
+                          })()}
+                        >
+                          <Plus className="w-4 h-4" />
+                        </Button>
                       </div>
-                      <div className="mt-2 text-sm">Total: <span className="font-semibold">ETB {Number(experience.price) * (numGuests || 1)}</span></div>
-                      <div className="mt-1 text-xs text-muted-foreground">Spots left: {availability?.available ?? experience.maxGuests}</div>
+                      <div className="text-center text-xs text-muted-foreground mb-2">
+                        Max {experience.maxGuests} guests • {availability?.available ?? experience.maxGuests} spots available
+                      </div>
+                      <div className="text-center text-base font-semibold text-primary">
+                        Total: ETB {Number(experience.price) * (numGuests || 1)}
+                      </div>
                       {availability && availability.available > 0 && numGuests >= availability.available && (
-                        <div className="mt-1 text-xs text-amber-700">Maximum available is {availability.available}.</div>
+                        <div className="mt-2 text-center text-xs text-amber-700">
+                          Maximum available is {availability.available}.
+                        </div>
                       )}
                     </div>
 
                     {/* Host */}
                     {experience.host && (
                       <div className="mb-6">
-                        <h4 className="text-lg font-semibold mb-3">
+                        <h4 className="text-base md:text-lg font-semibold mb-3">
                           Your Host
                         </h4>
                         <div className="flex items-center gap-3">
                           {typeof experience.host === 'object' ? (
                             <>
-                              <img
-                                src={
-                                  experience.host.photo && String(experience.host.photo).startsWith('/')
-                                    ? `${API_ORIGIN}${experience.host.photo}`
-                                    : experience.host.photo && String(experience.host.photo).startsWith('http')
-                                    ? experience.host.photo
-                                    : `https://i.pravatar.cc/80?u=${encodeURIComponent(
-                                          String((experience.host._id ?? experience.host.id ?? experience.host.name) || 'guest')
-                                      )}`
-                                }
-                                alt={experience.host.name}
-                                className="w-12 h-12 rounded-full object-cover"
-                              />
+                              {experience.host.photo ? (
+                                <Avatar className="w-12 h-12">
+                                  <AvatarImage
+                                    src={
+                                      String(experience.host.photo).startsWith('/')
+                                        ? `${API_ORIGIN}${experience.host.photo}`
+                                        : experience.host.photo
+                                    }
+                                    alt={experience.host.name}
+                                  />
+                                  <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
+                                    {(() => {
+                                      const name = experience.host.name || experience.host.email || 'Guest';
+                                      const parts = name.trim().split(/\s+/);
+                                      if (parts.length >= 2) {
+                                        return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+                                      }
+                                      return name.substring(0, 2).toUpperCase();
+                                    })()}
+                                  </AvatarFallback>
+                                </Avatar>
+                              ) : (
+                                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
+                                  {(() => {
+                                    const name = experience.host.name || experience.host.email || 'Guest';
+                                    const parts = name.trim().split(/\s+/);
+                                    if (parts.length >= 2) {
+                                      return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+                                    }
+                                    return name.substring(0, 2).toUpperCase();
+                                  })()}
+                                </div>
+                              )}
                               <div>
                                 <div className="font-semibold">{experience.host.name}</div>
                                 <div className="text-xs text-muted-foreground">
@@ -619,7 +683,7 @@ const TourDetail = () => {
                     {/* Map */}
                     {experience.startLocation?.coordinates && (
                       <div className="mb-6">
-                        <h4 className="text-lg font-semibold mb-3">Location</h4>
+                        <h4 className="text-base md:text-lg font-semibold mb-3">Location</h4>
                         <iframe
                           title="location-map"
                           src={`https://www.google.com/maps?q=${experience.startLocation.coordinates[1]},${experience.startLocation.coordinates[0]}&z=12&output=embed`}
@@ -719,6 +783,84 @@ const TourDetail = () => {
           </div>
         </section>
       </main>
+
+      {/* Review Modal */}
+      <Dialog open={reviewModalOpen} onOpenChange={setReviewModalOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">Write a Review</DialogTitle>
+            <DialogDescription>
+              Share your experience and help others discover this amazing adventure
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6 py-4">
+            <div>
+              <label className="text-sm font-medium mb-3 block">Your Rating</label>
+              <div className="flex gap-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star
+                    key={i}
+                    className={`w-8 h-8 cursor-pointer transition-all ${
+                      i < newRating
+                        ? "text-secondary fill-secondary scale-110"
+                        : "text-muted hover:text-secondary/50"
+                    }`}
+                    onClick={() => setNewRating(i + 1)}
+                  />
+                ))}
+              </div>
+              {newRating > 0 && (
+                <p className="text-sm text-muted-foreground mt-2">
+                  {newRating === 1 && "Poor"}
+                  {newRating === 2 && "Fair"}
+                  {newRating === 3 && "Good"}
+                  {newRating === 4 && "Very Good"}
+                  {newRating === 5 && "Excellent"}
+                </p>
+              )}
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium mb-2 block">Your Review</label>
+              <Textarea
+                value={newReview}
+                onChange={(e) => setNewReview(e.target.value)}
+                placeholder="Tell us about your experience... What did you enjoy? What could be improved?"
+                className="min-h-[150px]"
+                rows={6}
+              />
+            </div>
+            
+            <div className="flex gap-3 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setReviewModalOpen(false);
+                  setNewReview("");
+                  setNewRating(0);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSubmitReview}
+                disabled={submittingReview || !newReview || newRating === 0}
+                variant="hero"
+              >
+                {submittingReview ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  "Submit Review"
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>

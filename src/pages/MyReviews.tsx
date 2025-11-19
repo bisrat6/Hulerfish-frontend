@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import PageHeader from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -216,18 +217,10 @@ const MyReviews = () => {
       <Navigation />
 
       <main className="flex-1 pt-16">
-        <section className="relative bg-gradient-to-br from-primary via-primary-light to-earth py-24 text-primary-foreground">
-          <div className="absolute inset-0 pattern-ethiopian opacity-10" />
-          <div className="container mx-auto px-4 relative z-10">
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="font-display text-5xl md:text-6xl font-bold text-center"
-            >
-              {user?.role === "admin" ? "All Reviews" : "My Reviews"}
-            </motion.h1>
-          </div>
-        </section>
+        <PageHeader
+          title={user?.role === "admin" ? "All Reviews" : "My Reviews"}
+          className="text-center"
+        />
 
         <section className="py-16">
           <div className="container mx-auto px-4 max-w-4xl">

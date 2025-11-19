@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import PageHeader from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +26,7 @@ import {
   Calendar,
   FileText,
   Image as ImageIcon,
+  ArrowLeft,
 } from "lucide-react";
 import { hostApplicationAPI, guidesAPI } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
@@ -313,25 +315,28 @@ export default function ManageHostApplications() {
 
       <main className="flex-1 pt-16">
         {/* Header */}
-        <section className="relative bg-gradient-to-br from-primary via-primary-light to-earth py-24 text-primary-foreground">
-          <div className="absolute inset-0 pattern-ethiopian opacity-10" />
-          <div className="container mx-auto px-4 relative z-10">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="max-w-3xl"
+        <div className="relative">
+          <div className="absolute top-6 left-4 z-20">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/admin/dashboard")}
+              className="bg-background/80 backdrop-blur-sm text-muted-foreground hover:text-foreground border border-border/50"
             >
-              <h1 className="font-display text-5xl md:text-6xl font-bold mb-6 flex items-center gap-4">
-                <UserCheck className="w-12 h-12" />
-                Host Applications
-              </h1>
-              <p className="text-lg text-primary-foreground/90">
-                Review and manage host applications
-              </p>
-            </motion.div>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Dashboard
+            </Button>
           </div>
-        </section>
+          <PageHeader
+            title={
+              <>
+                <UserCheck className="w-10 h-10 inline-block mr-3 text-primary" />
+                Host Applications
+              </>
+            }
+            description="Review and manage host applications"
+          />
+        </div>
 
         {/* Applications List */}
         <section className="py-16">

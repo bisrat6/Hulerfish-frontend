@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import PageHeader from "@/components/PageHeader";
 import {
   Card,
   CardContent,
@@ -23,6 +24,7 @@ import {
   AlertCircle,
   UserCheck,
   ArrowLeftRight,
+  ArrowLeft,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -39,8 +41,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { guidesAPI, experiencesAPI } from "@/lib/api";
+import { guidesAPI, experiencesAPI, API_ORIGIN } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { Image as ImageIcon, FileText, Camera, IdCard, X } from "lucide-react";
 
 const NO_GUIDE_VALUE = "__NO_GUIDE__";
 
@@ -61,6 +64,7 @@ export default function GuideManagement() {
   const [hostSelections, setHostSelections] = useState<Record<string, string>>({});
   const [isLoadingHosts, setIsLoadingHosts] = useState(false);
   const [isReassigningHostId, setIsReassigningHostId] = useState<string | null>(null);
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
 
   const isMountedRef = useRef(true);
 
@@ -309,20 +313,28 @@ export default function GuideManagement() {
 
       <main className="flex-1 pt-16">
         {/* Header */}
-        <section className="relative bg-gradient-to-br from-primary via-primary-light to-earth py-24 text-primary-foreground">
-          <div className="absolute inset-0 pattern-ethiopian opacity-10" />
-          <div className="container mx-auto px-4 relative z-10">
-            <div className="max-w-3xl">
-              <h1 className="font-display text-5xl md:text-6xl font-bold mb-6 flex items-center gap-4">
-                <Globe className="w-12 h-12" />
-                Guide Management
-              </h1>
-              <p className="text-lg text-primary-foreground/90">
-                Oversee all guides, review their assignments, and help them stay connected with hosts.
-              </p>
-            </div>
+        <div className="relative">
+          <div className="absolute top-6 left-4 z-20">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/admin/dashboard")}
+              className="bg-background/80 backdrop-blur-sm text-muted-foreground hover:text-foreground border border-border/50"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Dashboard
+            </Button>
           </div>
-        </section>
+          <PageHeader
+            title={
+              <>
+                <Globe className="w-10 h-10 inline-block mr-3 text-primary" />
+                Guide Management
+              </>
+            }
+            description="Oversee all guides, review their assignments, and help them stay connected with hosts."
+          />
+        </div>
 
         {/* Filter + guides list */}
         <section className="py-16">
@@ -416,11 +428,400 @@ export default function GuideManagement() {
               {selectedGuide?.name || "Guide Details"}
             </DialogTitle>
             <DialogDescription>
-              Review hosts connected to this guide and manage their assignments.
+              Complete guide information, uploaded documents, and assigned hosts.
             </DialogDescription>
           </DialogHeader>
 
-          {isLoadingHosts ? (
+          {/* Guide Information Section */}
+          {selectedGuide && (
+            <div className="space-y-6 mb-8">
+              {/* Personal Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="w-5 h-5" />
+                    Personal Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-3">
+                      <div>
+                        <span className="text-sm font-medium text-muted-foreground">Full Name:</span>
+                        <p className="text-foreground">
+                          {selectedGuide.guideApplicationData?.personalInfo?.fullName ||
+                            selectedGuide.guideApplicationData?.fullName ||
+                            selectedGuide.name ||
+                            "Not provided"}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-muted-foreground">Email:</span>
+                        <p className="text-foreground">
+                          {selectedGuide.guideApplicationData?.personalInfo?.email ||
+                            selectedGuide.guideApplicationData?.email ||
+                            selectedGuide.email ||
+                            "Not provided"}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-muted-foreground">Phone:</span>
+                        <p className="text-foreground">
+                          {selectedGuide.guideApplicationData?.personalInfo?.phoneNumber ||
+                            selectedGuide.guideApplicationData?.phoneNumber ||
+                            "Not provided"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div>
+                        <span className="text-sm font-medium text-muted-foreground">Location:</span>
+                        <p className="text-foreground">
+                          {selectedGuide.guideApplicationData?.personalInfo?.cityRegion ||
+                            selectedGuide.guideApplicationData?.cityRegion ||
+                            selectedGuide.location ||
+                            "Not provided"}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-muted-foreground">Address:</span>
+                        <p className="text-foreground">
+                          {selectedGuide.guideApplicationData?.personalInfo?.fullAddress ||
+                            selectedGuide.guideApplicationData?.fullAddress ||
+                            "Not provided"}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-muted-foreground">Languages:</span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {(selectedGuide.guideApplicationData?.personalInfo?.languagesSpoken ||
+                            selectedGuide.guideApplicationData?.languagesSpoken ||
+                            []).length > 0 ? (
+                            (selectedGuide.guideApplicationData?.personalInfo?.languagesSpoken ||
+                              selectedGuide.guideApplicationData?.languagesSpoken ||
+                              []).map((lang: string, idx: number) => (
+                              <Badge key={idx} variant="outline">
+                                {lang}
+                              </Badge>
+                            ))
+                          ) : (
+                            <span className="text-muted-foreground text-sm">Not provided</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {(selectedGuide.guideApplicationData?.personalInfo?.aboutYou ||
+                    selectedGuide.guideApplicationData?.aboutYou) && (
+                    <div className="mt-4 pt-4 border-t">
+                      <span className="text-sm font-medium text-muted-foreground">About:</span>
+                      <p className="text-foreground mt-1 leading-relaxed">
+                        {selectedGuide.guideApplicationData?.personalInfo?.aboutYou ||
+                          selectedGuide.guideApplicationData?.aboutYou}
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Uploaded Media */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ImageIcon className="w-5 h-5" />
+                    Uploaded Documents & Photos
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Personal Photo */}
+                    {(selectedGuide.guideApplicationData?.media?.personalPhoto ||
+                      selectedGuide.guideApplicationData?.mediaUrls?.find((url: string) =>
+                        url.includes("personalPhoto")
+                      )) && (
+                      <div>
+                        <h4 className="font-medium mb-2 flex items-center gap-2">
+                          <Camera className="w-4 h-4" />
+                          Personal Photo
+                        </h4>
+                        <div
+                          className="relative rounded-lg overflow-hidden border border-border cursor-pointer hover:border-primary transition-colors"
+                          onClick={() => {
+                            const photoUrl =
+                              selectedGuide.guideApplicationData?.media?.personalPhoto ||
+                              selectedGuide.guideApplicationData?.mediaUrls?.find((url: string) =>
+                                url.includes("personalPhoto")
+                              );
+                            if (photoUrl) {
+                              const fullUrl =
+                                photoUrl && String(photoUrl).startsWith("/")
+                                  ? `${API_ORIGIN}${photoUrl}`
+                                  : photoUrl;
+                              setFullscreenImage(fullUrl);
+                            }
+                          }}
+                        >
+                          <img
+                            src={
+                              (() => {
+                                const photoUrl =
+                                  selectedGuide.guideApplicationData?.media?.personalPhoto ||
+                                  selectedGuide.guideApplicationData?.mediaUrls?.find((url: string) =>
+                                    url.includes("personalPhoto")
+                                  );
+                                if (!photoUrl) return "";
+                                return photoUrl && String(photoUrl).startsWith("/")
+                                  ? `${API_ORIGIN}${photoUrl}`
+                                  : photoUrl;
+                              })()
+                            }
+                            alt="Personal Photo"
+                            className="w-full h-48 object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors flex items-center justify-center">
+                            <span className="text-white opacity-0 hover:opacity-100 text-sm font-medium">
+                              Click to view full screen
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* National ID Front */}
+                    {(selectedGuide.guideApplicationData?.media?.nationalIdFront ||
+                      selectedGuide.guideApplicationData?.mediaUrls?.find((url: string) =>
+                        url.includes("nationalIdFront")
+                      )) && (
+                      <div>
+                        <h4 className="font-medium mb-2 flex items-center gap-2">
+                          <IdCard className="w-4 h-4" />
+                          National ID (Front)
+                        </h4>
+                        <div
+                          className="relative rounded-lg overflow-hidden border border-border cursor-pointer hover:border-primary transition-colors"
+                          onClick={() => {
+                            const idUrl =
+                              selectedGuide.guideApplicationData?.media?.nationalIdFront ||
+                              selectedGuide.guideApplicationData?.mediaUrls?.find((url: string) =>
+                                url.includes("nationalIdFront")
+                              );
+                            if (idUrl) {
+                              const fullUrl =
+                                idUrl && String(idUrl).startsWith("/")
+                                  ? `${API_ORIGIN}${idUrl}`
+                                  : idUrl;
+                              setFullscreenImage(fullUrl);
+                            }
+                          }}
+                        >
+                          <img
+                            src={
+                              (() => {
+                                const idUrl =
+                                  selectedGuide.guideApplicationData?.media?.nationalIdFront ||
+                                  selectedGuide.guideApplicationData?.mediaUrls?.find((url: string) =>
+                                    url.includes("nationalIdFront")
+                                  );
+                                if (!idUrl) return "";
+                                return idUrl && String(idUrl).startsWith("/")
+                                  ? `${API_ORIGIN}${idUrl}`
+                                  : idUrl;
+                              })()
+                            }
+                            alt="National ID Front"
+                            className="w-full h-48 object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors flex items-center justify-center">
+                            <span className="text-white opacity-0 hover:opacity-100 text-sm font-medium">
+                              Click to view full screen
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* National ID Back */}
+                    {(selectedGuide.guideApplicationData?.media?.nationalIdBack ||
+                      selectedGuide.guideApplicationData?.mediaUrls?.find((url: string) =>
+                        url.includes("nationalIdBack")
+                      )) && (
+                      <div>
+                        <h4 className="font-medium mb-2 flex items-center gap-2">
+                          <IdCard className="w-4 h-4" />
+                          National ID (Back)
+                        </h4>
+                        <div
+                          className="relative rounded-lg overflow-hidden border border-border cursor-pointer hover:border-primary transition-colors"
+                          onClick={() => {
+                            const idUrl =
+                              selectedGuide.guideApplicationData?.media?.nationalIdBack ||
+                              selectedGuide.guideApplicationData?.mediaUrls?.find((url: string) =>
+                                url.includes("nationalIdBack")
+                              );
+                            if (idUrl) {
+                              const fullUrl =
+                                idUrl && String(idUrl).startsWith("/")
+                                  ? `${API_ORIGIN}${idUrl}`
+                                  : idUrl;
+                              setFullscreenImage(fullUrl);
+                            }
+                          }}
+                        >
+                          <img
+                            src={
+                              (() => {
+                                const idUrl =
+                                  selectedGuide.guideApplicationData?.media?.nationalIdBack ||
+                                  selectedGuide.guideApplicationData?.mediaUrls?.find((url: string) =>
+                                    url.includes("nationalIdBack")
+                                  );
+                                if (!idUrl) return "";
+                                return idUrl && String(idUrl).startsWith("/")
+                                  ? `${API_ORIGIN}${idUrl}`
+                                  : idUrl;
+                              })()
+                            }
+                            alt="National ID Back"
+                            className="w-full h-48 object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors flex items-center justify-center">
+                            <span className="text-white opacity-0 hover:opacity-100 text-sm font-medium">
+                              Click to view full screen
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Tour Guide Certificate */}
+                    {(selectedGuide.guideApplicationData?.media?.tourGuideCertificate ||
+                      selectedGuide.guideApplicationData?.mediaUrls?.find((url: string) =>
+                        url.includes("tourGuideCertificate") || url.includes("certificate")
+                      )) && (
+                      <div>
+                        <h4 className="font-medium mb-2 flex items-center gap-2">
+                          <FileText className="w-4 h-4" />
+                          Tour Guide Certificate
+                        </h4>
+                        <div
+                          className="relative rounded-lg overflow-hidden border border-border cursor-pointer hover:border-primary transition-colors"
+                          onClick={() => {
+                            const certUrl =
+                              selectedGuide.guideApplicationData?.media?.tourGuideCertificate ||
+                              selectedGuide.guideApplicationData?.mediaUrls?.find((url: string) =>
+                                url.includes("tourGuideCertificate") || url.includes("certificate")
+                              );
+                            if (certUrl) {
+                              const fullUrl =
+                                certUrl && String(certUrl).startsWith("/")
+                                  ? `${API_ORIGIN}${certUrl}`
+                                  : certUrl;
+                              setFullscreenImage(fullUrl);
+                            }
+                          }}
+                        >
+                          <img
+                            src={
+                              (() => {
+                                const certUrl =
+                                  selectedGuide.guideApplicationData?.media?.tourGuideCertificate ||
+                                  selectedGuide.guideApplicationData?.mediaUrls?.find((url: string) =>
+                                    url.includes("tourGuideCertificate") || url.includes("certificate")
+                                  );
+                                if (!certUrl) return "";
+                                return certUrl && String(certUrl).startsWith("/")
+                                  ? `${API_ORIGIN}${certUrl}`
+                                  : certUrl;
+                              })()
+                            }
+                            alt="Tour Guide Certificate"
+                            className="w-full h-48 object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors flex items-center justify-center">
+                            <span className="text-white opacity-0 hover:opacity-100 text-sm font-medium">
+                              Click to view full screen
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  {!selectedGuide.guideApplicationData?.media?.personalPhoto &&
+                    !selectedGuide.guideApplicationData?.media?.nationalIdFront &&
+                    !selectedGuide.guideApplicationData?.media?.nationalIdBack &&
+                    !selectedGuide.guideApplicationData?.media?.tourGuideCertificate &&
+                    (!selectedGuide.guideApplicationData?.mediaUrls ||
+                      selectedGuide.guideApplicationData?.mediaUrls.length === 0) && (
+                    <p className="text-sm text-muted-foreground italic text-center py-4">
+                      No media uploaded
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Experience Details */}
+              {(selectedGuide.guideApplicationData?.experienceDetails ||
+                selectedGuide.guideApplicationData?.experienceTypes ||
+                selectedGuide.guideApplicationData?.specialties) && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Briefcase className="w-5 h-5" />
+                      Experience Details
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {selectedGuide.guideApplicationData?.experienceDetails?.experienceTypes && (
+                        <div>
+                          <span className="text-sm font-medium text-muted-foreground">Experience Types:</span>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {selectedGuide.guideApplicationData.experienceDetails.experienceTypes.map(
+                              (type: string, idx: number) => (
+                                <Badge key={idx} variant="outline">
+                                  {type}
+                                </Badge>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      {selectedGuide.guideApplicationData?.experienceDetails?.specialties && (
+                        <div>
+                          <span className="text-sm font-medium text-muted-foreground">Specialties:</span>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {selectedGuide.guideApplicationData.experienceDetails.specialties.map(
+                              (spec: string, idx: number) => (
+                                <Badge key={idx} variant="secondary">
+                                  {spec}
+                                </Badge>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      {selectedGuide.guideApplicationData?.experienceDetails?.previousExperience && (
+                        <div>
+                          <span className="text-sm font-medium text-muted-foreground">Previous Experience:</span>
+                          <p className="text-foreground mt-1 leading-relaxed">
+                            {selectedGuide.guideApplicationData.experienceDetails.previousExperience}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+
+          {/* Assigned Hosts Section */}
+          <div className="border-t pt-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Users className="w-5 h-5" />
+              Assigned Hosts
+            </h3>
+            {isLoadingHosts ? (
             <div className="py-10 flex items-center justify-center">
               <Loader2 className="w-6 h-6 animate-spin text-primary mr-3" />
               <span>Loading assigned hosts...</span>
@@ -597,8 +998,32 @@ export default function GuideManagement() {
               })}
             </div>
           )}
+          </div>
         </DialogContent>
       </Dialog>
+
+      {/* Fullscreen Image Modal */}
+      {fullscreenImage && (
+        <Dialog open={!!fullscreenImage} onOpenChange={() => setFullscreenImage(null)}>
+          <DialogContent className="max-w-7xl max-h-[95vh] p-0">
+            <div className="relative">
+              <img
+                src={fullscreenImage}
+                alt="Fullscreen view"
+                className="w-full h-auto max-h-[95vh] object-contain"
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-2 right-2 bg-background/80 hover:bg-background"
+                onClick={() => setFullscreenImage(null)}
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { motion } from "framer-motion";
 import {
   Users,
@@ -362,8 +363,19 @@ export default function HostManagement() {
 
       <main className="flex-1 pt-16">
         {/* Header */}
-        <section className="relative bg-gradient-to-br from-primary via-primary-light to-earth py-24 text-primary-foreground">
-          <div className="absolute inset-0 pattern-ethiopian opacity-10" />
+        <section className="relative bg-gradient-to-br from-primary/5 via-primary-light/5 to-earth/5 py-16 md:py-20 border-b border-border/50">
+          <div className="absolute inset-0 bg-muted/30" />
+          <div className="absolute top-6 left-4 z-20">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/admin/dashboard")}
+              className="bg-background/80 backdrop-blur-sm text-muted-foreground hover:text-foreground border border-border/50"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </div>
           <div className="container mx-auto px-4 relative z-10">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -371,20 +383,11 @@ export default function HostManagement() {
               transition={{ duration: 0.6 }}
               className="max-w-3xl"
             >
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate("/admin/dashboard")}
-                className="mb-4 text-primary-foreground hover:text-primary-foreground/80"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Dashboard
-              </Button>
-              <h1 className="font-display text-5xl md:text-6xl font-bold mb-6 flex items-center gap-4">
-                <Users className="w-12 h-12" />
+              <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground mb-4 flex items-center gap-4">
+                <Users className="w-10 h-10 text-primary" />
                 Host Management
               </h1>
-              <p className="text-lg text-primary-foreground/90">
+              <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
                 Manage all approved hosts and their experiences on the platform.
               </p>
             </motion.div>
@@ -427,17 +430,24 @@ export default function HostManagement() {
                         <CardHeader>
                           <div className="flex items-start justify-between">
                             <div className="flex items-center gap-3">
-                              {host.photo ? (
-                                <img
-                                  src={host.photo}
-                                  alt={host.name}
-                                  className="w-12 h-12 rounded-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                                  <Users className="w-6 h-6 text-primary" />
-                                </div>
-                              )}
+                              <Avatar className="w-12 h-12">
+                                {host.photo && (
+                                  <AvatarImage
+                                    src={host.photo}
+                                    alt={host.name}
+                                  />
+                                )}
+                                <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
+                                  {(() => {
+                                    const name = host.name || host.email || 'Host';
+                                    const parts = name.trim().split(/\s+/);
+                                    if (parts.length >= 2) {
+                                      return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+                                    }
+                                    return name.substring(0, 2).toUpperCase();
+                                  })()}
+                                </AvatarFallback>
+                              </Avatar>
                               <div>
                                 <CardTitle className="text-lg">
                                   {host.name}
@@ -519,20 +529,24 @@ export default function HostManagement() {
         <DialogContent className="max-w-6xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3 text-2xl">
-              {selectedHost?.photo ? (
-                <img
-                  src={selectedHost.photo}
-                  alt={selectedHost.name || "Host"}
-                  className="w-12 h-12 rounded-full object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                  }}
-                />
-              ) : (
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Users className="w-6 h-6 text-primary" />
-                </div>
-              )}
+              <Avatar className="w-12 h-12">
+                {selectedHost?.photo && (
+                  <AvatarImage
+                    src={selectedHost.photo}
+                    alt={selectedHost.name || "Host"}
+                  />
+                )}
+                <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
+                  {(() => {
+                    const name = selectedHost?.name || selectedHost?.email || 'Host';
+                    const parts = name.trim().split(/\s+/);
+                    if (parts.length >= 2) {
+                      return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+                    }
+                    return name.substring(0, 2).toUpperCase();
+                  })()}
+                </AvatarFallback>
+              </Avatar>
               {selectedHost?.name || "Host Details"}
             </DialogTitle>
             <DialogDescription>

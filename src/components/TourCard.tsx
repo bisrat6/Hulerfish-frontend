@@ -1,7 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Calendar, Users, Star } from "lucide-react";
+import { Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { API_ORIGIN, bookingsAPI } from "@/lib/api";
 import { motion } from "framer-motion";
@@ -44,86 +43,71 @@ const TourCard = ({ tour }: TourCardProps) => {
       viewport={{ once: true }}
       transition={{ duration: 0.5 }}
     >
-      <Card className="group overflow-hidden hover-lift shadow-lg hover:shadow-2xl transition-all duration-300 border-2 hover:border-primary/20">
-        {/* Experience Image */}
-        <div className="relative h-56 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-primary/80 z-10" />
-          <img
-            src={
-              tour.imageCover && String(tour.imageCover).startsWith("/")
-                ? `${API_ORIGIN}${tour.imageCover}`
-                : tour.imageCover ||
-                  `https://placehold.co/600x400/2d5a3d/ffd700?text=${encodeURIComponent(
-                    tour.title
-                  )}`
-            }
-            alt={tour.title}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-          />
-          {available !== null && (
-            <div className="absolute top-2 left-2 z-20">
-              {available < 1 ? (
-                <Badge variant="destructive">Sold out</Badge>
-              ) : (
-                <Badge variant="secondary">{available} left</Badge>
-              )}
-            </div>
-          )}
-        </div>
-
-        <CardContent className="p-6">
-          {/* Experience Header */}
-          <div className="mb-4">
-            <h3 className="font-display text-2xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
-              {tour.title}
-            </h3>
-            <p className="text-muted-foreground text-sm line-clamp-2">
-              {tour.summary}
-            </p>
-          </div>
-
-          {/* Experience Details Grid */}
-          <div className="grid grid-cols-2 gap-3 mb-4 pb-4 border-b border-border">
-            <div className="flex items-center gap-2 text-sm">
-              <Calendar className="w-4 h-4 text-primary" />
-              <span className="text-muted-foreground">
-                {tour.duration}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 text-sm">
-              <Users className="w-4 h-4 text-primary" />
-              <span className="text-muted-foreground">
-                Max {tour.maxGuests} guests
-              </span>
-            </div>
-            <div className="flex items-center gap-2 text-sm">
-              <Star className="w-4 h-4 text-secondary fill-secondary" />
-              <span className="text-muted-foreground">
-                {tour.ratingsAverage} ({tour.ratingsQuantity})
-              </span>
-            </div>
-          </div>
-
-          {/* Price and CTA */}
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-sm text-muted-foreground">Per guest</span>
-              <p className="text-3xl font-bold text-primary">
-                ETB {tour.price}
-              </p>
-            </div>
-            {available !== null && available < 1 ? (
-              <Button variant="outline" size="default" disabled>
-                Sold out
-              </Button>
-            ) : (
-              <Button asChild variant="adventure" size="default">
-                <Link to={`/experiences/${tour._id ?? tour.id}`}>Join Experience</Link>
-              </Button>
+      <Link to={`/experiences/${tour._id ?? tour.id}`}>
+        <Card className="group overflow-hidden cursor-pointer hover-lift shadow-sm hover:shadow-md transition-all duration-300 border border-border/50 hover:border-primary/30">
+          {/* Experience Image */}
+          <div className="relative h-48 overflow-hidden rounded-t-lg">
+            <img
+              src={
+                tour.imageCover && String(tour.imageCover).startsWith("/")
+                  ? `${API_ORIGIN}${tour.imageCover}`
+                  : tour.imageCover ||
+                    `https://placehold.co/600x400/2d5a3d/ffd700?text=${encodeURIComponent(
+                      tour.title
+                    )}`
+              }
+              alt={tour.title}
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+            />
+            {available !== null && (
+              <div className="absolute top-2 right-2 z-20">
+                {available < 1 ? (
+                  <Badge variant="destructive" className="text-xs">Sold out</Badge>
+                ) : (
+                  <Badge variant="secondary" className="text-xs bg-background/90 backdrop-blur-sm">
+                    {available} left
+                  </Badge>
+                )}
+              </div>
             )}
           </div>
-        </CardContent>
-      </Card>
+
+          <CardContent className="p-4">
+            {/* Title and Rating */}
+            <div className="mb-2">
+              <h3 className="font-semibold text-base text-foreground mb-1 group-hover:text-primary transition-colors line-clamp-1">
+                {tour.title}
+              </h3>
+              <div className="flex items-center gap-1.5 text-sm">
+                <Star className="w-3.5 h-3.5 text-secondary fill-secondary flex-shrink-0" />
+                <span className="font-medium text-foreground">
+                  {tour.ratingsAverage.toFixed(1)}
+                </span>
+                <span className="text-muted-foreground">
+                  ({tour.ratingsQuantity})
+                </span>
+                <span className="text-muted-foreground">·</span>
+                <span className="text-muted-foreground text-xs">
+                  {tour.duration}
+                </span>
+              </div>
+            </div>
+
+            {/* Summary */}
+            <p className="text-muted-foreground text-sm line-clamp-2 mb-3 leading-relaxed">
+              {tour.summary}
+            </p>
+
+            {/* Price */}
+            <div className="flex items-baseline gap-1">
+              <span className="text-lg font-semibold text-foreground">
+                ETB {tour.price}
+              </span>
+              <span className="text-xs text-muted-foreground">/guest</span>
+            </div>
+          </CardContent>
+        </Card>
+      </Link>
     </motion.div>
   );
 };

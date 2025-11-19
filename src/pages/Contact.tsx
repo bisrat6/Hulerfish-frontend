@@ -2,6 +2,7 @@ import { useState } from "react";
 import emailjs from "@emailjs/browser";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import PageHeader from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -82,24 +83,11 @@ const Contact = () => {
       <Navigation />
 
       <main className="flex-1 pt-16">
-        <section className="relative bg-gradient-to-br from-primary via-primary-light to-earth py-24 text-primary-foreground">
-          <div className="absolute inset-0 pattern-ethiopian opacity-10" />
-          <div className="container mx-auto px-4 relative z-10">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center max-w-3xl mx-auto"
-            >
-              <h1 className="font-display text-5xl md:text-6xl font-bold mb-6">
-                Get in Touch
-              </h1>
-              <p className="text-lg text-primary-foreground/90">
-                Have questions about our home experiences? We're here to help you plan your
-                perfect cultural connection.
-              </p>
-            </motion.div>
-          </div>
-        </section>
+        <PageHeader
+          title="Get in Touch"
+          description="Have questions about our home experiences? We're here to help you plan your perfect cultural connection."
+          className="text-center"
+        />
 
         <section className="py-16">
           <div className="container mx-auto px-4 max-w-6xl">

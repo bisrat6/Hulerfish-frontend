@@ -1,104 +1,94 @@
 import { Mountain, Facebook, Instagram, Twitter, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import textilePattern from "@/assets/ethiopian-textile.jpg";
 
 const Footer = () => {
-  const { user } = useAuth();
-
-  const reviewsLink = user ? "/my-reviews" : "/login";
 
   return (
-    <footer className="relative bg-primary text-primary-foreground overflow-hidden">
-      {/* Subtle Pattern Background */}
-      <div className="absolute inset-0 opacity-5">
-        <img
-          src={textilePattern}
-          alt=""
-          className="w-full h-full object-cover"
-        />
-      </div>
-
-      <div className="relative z-10 container mx-auto px-4 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+    <footer className="relative bg-muted/50 border-t border-border overflow-hidden">
+      <div className="relative z-10 container mx-auto px-4 py-10">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           {/* Brand */}
           <div className="md:col-span-2">
             <Link
               to="/"
-              className="flex items-center gap-2 font-display text-3xl font-bold mb-4"
+              className="flex items-center gap-2 font-display text-2xl font-bold mb-3 text-foreground hover:text-primary transition-colors"
             >
-              <Mountain className="w-8 h-8 text-secondary" />
-              <span>HUlet fish</span>
+              <Mountain className="w-7 h-7 text-primary" />
+              <span>Hulet Fish</span>
             </Link>
-            <p className="text-primary-foreground/80 mb-6 max-w-md">
+            <p className="text-muted-foreground text-sm mb-4 max-w-md leading-relaxed">
               Connect with local families through authentic home experiences. 
               From coffee ceremonies to cooking workshops, discover meaningful 
-              cultural connections that create lasting memories.
+              cultural connections.
             </p>
-            <div className="flex gap-4">
+            <div className="flex gap-2">
               <a
                 href="/"
-                className="w-10 h-10 rounded-full bg-secondary/20 hover:bg-secondary hover:text-secondary-foreground flex items-center justify-center transition-all"
+                className="w-9 h-9 rounded-full bg-muted hover:bg-primary hover:text-primary-foreground flex items-center justify-center transition-all border border-border"
+                aria-label="Facebook"
               >
-                <Facebook className="w-5 h-5" />
+                <Facebook className="w-4 h-4" />
               </a>
               <a
                 href="/"
-                className="w-10 h-10 rounded-full bg-secondary/20 hover:bg-secondary hover:text-secondary-foreground flex items-center justify-center transition-all"
+                className="w-9 h-9 rounded-full bg-muted hover:bg-primary hover:text-primary-foreground flex items-center justify-center transition-all border border-border"
+                aria-label="Instagram"
               >
-                <Instagram className="w-5 h-5" />
+                <Instagram className="w-4 h-4" />
               </a>
               <a
                 href="/"
-                className="w-10 h-10 rounded-full bg-secondary/20 hover:bg-secondary hover:text-secondary-foreground flex items-center justify-center transition-all"
+                className="w-9 h-9 rounded-full bg-muted hover:bg-primary hover:text-primary-foreground flex items-center justify-center transition-all border border-border"
+                aria-label="Twitter"
               >
-                <Twitter className="w-5 h-5" />
+                <Twitter className="w-4 h-4" />
               </a>
               <a
                 href="mailto:hello@huletfish.com"
-                className="w-10 h-10 rounded-full bg-secondary/20 hover:bg-secondary hover:text-secondary-foreground flex items-center justify-center transition-all"
+                className="w-9 h-9 rounded-full bg-muted hover:bg-primary hover:text-primary-foreground flex items-center justify-center transition-all border border-border"
+                aria-label="Email"
               >
-                <Mail className="w-5 h-5" />
+                <Mail className="w-4 h-4" />
               </a>
             </div>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h3 className="font-display text-lg font-bold mb-4 text-secondary">
+            <h3 className="font-semibold text-sm mb-3 text-foreground uppercase tracking-wide">
               Quick Links
             </h3>
-            <ul className="space-y-3">
+            <ul className="space-y-2">
               <li>
                 <Link
-                  to="/tours"
-                  className="text-primary-foreground/80 hover:text-secondary transition-colors"
+                  to="/experiences"
+                  className="text-muted-foreground hover:text-primary transition-colors text-sm inline-block"
                 >
-                  All Experiences
+                  Experiences
                 </Link>
               </li>
               <li>
                 <Link
                   to="/about"
-                  className="text-primary-foreground/80 hover:text-secondary transition-colors"
+                  className="text-muted-foreground hover:text-primary transition-colors text-sm inline-block"
                 >
                   About Us
                 </Link>
               </li>
               <li>
                 <Link
-                  to="/tours"
-                  className="text-primary-foreground/80 hover:text-secondary transition-colors"
+                  to="/contact"
+                  className="text-muted-foreground hover:text-primary transition-colors text-sm inline-block"
                 >
-                  Home Experiences
+                  Contact
                 </Link>
               </li>
               <li>
                 <Link
-                  to={reviewsLink}
-                  className="text-primary-foreground/80 hover:text-secondary transition-colors"
+                  to="/host-application"
+                  className="text-muted-foreground hover:text-primary transition-colors text-sm inline-block"
                 >
-                  Reviews
+                  Become a Host
                 </Link>
               </li>
             </ul>
@@ -106,32 +96,39 @@ const Footer = () => {
 
           {/* Contact */}
           <div>
-            <h3 className="font-display text-lg font-bold mb-4 text-secondary">
+            <h3 className="font-semibold text-sm mb-3 text-foreground uppercase tracking-wide">
               Contact
             </h3>
-            <ul className="space-y-3 text-primary-foreground/80">
+            <ul className="space-y-2 text-muted-foreground text-sm">
               <li>Addis Ababa, Ethiopia</li>
-              <li>hello@huletfish.com</li>
+              <li>
+                <a 
+                  href="mailto:hello@huletfish.com" 
+                  className="hover:text-primary transition-colors"
+                >
+                  hello@huletfish.com
+                </a>
+              </li>
               <li>+251 11 123 4567</li>
             </ul>
           </div>
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-8 border-t border-primary-foreground/20 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-primary-foreground/60">
+        <div className="pt-6 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-muted-foreground">
           <p>
-            &copy; {new Date().getFullYear()} HUlet fish. All rights reserved.
+            &copy; {new Date().getFullYear()} Hulet Fish. All rights reserved.
           </p>
-          <div className="flex gap-6">
+          <div className="flex gap-4">
             <Link
               to="/privacy"
-              className="hover:text-secondary transition-colors"
+              className="hover:text-primary transition-colors"
             >
               Privacy Policy
             </Link>
             <Link
               to="/terms"
-              className="hover:text-secondary transition-colors"
+              className="hover:text-primary transition-colors"
             >
               Terms of Service
             </Link>

@@ -2,15 +2,19 @@ import { useState, useEffect } from "react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import TourCard from "@/components/TourCard";
-import { Loader2, AlertCircle } from "lucide-react";
+import PageHeader from "@/components/PageHeader";
+import { Loader2, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { experiencesAPI } from "@/lib/api";
 import { motion } from "framer-motion";
 
 const Tours = () => {
   const [sort, setSort] = useState<string>("");
   const [page, setPage] = useState<number>(1);
-  const [limit, setLimit] = useState<number>(9);
+  const limit = 8; // Fixed limit - 8 per page
   const [experiences, setExperiences] = useState<Array<Record<string, unknown>>>([]);
+  const [totalPages, setTotalPages] = useState<number>(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,7 +28,14 @@ const Tours = () => {
         params.page = page;
         params.limit = limit;
         const response = await experiencesAPI.getAll(params);
-        setExperiences(response.data.data);
+        const experiencesData = response.data.data || response.data || [];
+        setExperiences(experiencesData);
+        // Calculate total pages - check various possible response structures
+        const total = response.data.total || 
+                     response.data.totalDocs || 
+                     response.data.count ||
+                     (experiencesData.length < limit ? experiencesData.length : experiencesData.length + 1);
+        setTotalPages(Math.max(1, Math.ceil(total / limit)));
       } catch (err: any) {
         console.error("Failed to fetch experiences:", err);
         let errorMessage = "Failed to load experiences from server. Please try again later.";
@@ -41,7 +52,7 @@ const Tours = () => {
     };
 
     fetchExperiences();
-  }, [sort, page, limit]);
+  }, [sort, page]);
 
   // Experiences are already filtered in useEffect
   const filteredExperiences = experiences;
@@ -52,26 +63,15 @@ const Tours = () => {
 
       <main className="flex-1 pt-16">
         {/* Header */}
-        <section className="relative bg-gradient-to-br from-primary via-primary-light to-earth py-24 text-primary-foreground overflow-hidden">
-          <div className="absolute inset-0 pattern-ethiopian" />
-          <div className="container mx-auto px-4 relative z-10">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="max-w-3xl"
-            >
-              <h1 className="font-display text-5xl md:text-6xl font-bold mb-6">
-                Discover Authentic{" "}
-                <span className="text-secondary">Home Experiences</span>
-              </h1>
-              <p className="text-lg text-primary-foreground/90">
-                Browse our carefully curated collection of immersive experiences hosted by local families. 
-                From traditional coffee ceremonies to hands-on cooking workshops, discover authentic cultural connections.
-              </p>
-            </motion.div>
-          </div>
-        </section>
+        <PageHeader
+          title={
+            <>
+              Discover Authentic{" "}
+              <span className="text-primary">Home Experiences</span>
+            </>
+          }
+          description="Browse our carefully curated collection of immersive experiences hosted by local families. From traditional coffee ceremonies to hands-on cooking workshops, discover authentic cultural connections."
+        />
 
         {/* Experiences Grid */}
         <section className="py-16">
@@ -87,8 +87,8 @@ const Tours = () => {
               </motion.div>
             )}
 
-            <div className="mb-6 flex items-center justify-between">
-              <p className="text-muted-foreground">
+            <div className="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <p className="text-sm text-muted-foreground">
                 Showing{" "}
                 <span className="font-semibold text-foreground">
                   {filteredExperiences.length}
@@ -96,28 +96,22 @@ const Tours = () => {
                 experience
                 {filteredExperiences.length !== 1 ? "s" : ""}
               </p>
-              <div className="flex items-center gap-2">
-                <select
-                  value={sort}
-                  onChange={(e) => setSort(e.target.value)}
-                  className="px-2 py-1 border"
-                >
-                  <option value="">Sort</option>
-                  <option value="-ratingsAverage,price">Top rated</option>
-                  <option value="price">Price: Low to High</option>
-                  <option value="-price">Price: High to Low</option>
-                  <option value="-createdAt">Newest</option>
-                </select>
-                <select
-                  value={limit}
-                  onChange={(e) => setLimit(Number(e.target.value))}
-                  className="px-2 py-1 border"
-                >
-                  <option value={6}>6 / page</option>
-                  <option value={9}>9 / page</option>
-                  <option value={12}>12 / page</option>
-                  <option value={24}>24 / page</option>
-                </select>
+              <div className="flex items-center gap-3">
+                <label htmlFor="sort" className="text-sm text-muted-foreground whitespace-nowrap">
+                  Sort by:
+                </label>
+                <Select value={sort || "default"} onValueChange={(value) => setSort(value === "default" ? "" : value)}>
+                  <SelectTrigger id="sort" className="w-[180px]">
+                    <SelectValue placeholder="Default" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="default">Default</SelectItem>
+                    <SelectItem value="-ratingsAverage,price">Top Rated</SelectItem>
+                    <SelectItem value="price">Price: Low to High</SelectItem>
+                    <SelectItem value="-price">Price: High to Low</SelectItem>
+                    <SelectItem value="-createdAt">Newest First</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -127,27 +121,64 @@ const Tours = () => {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {filteredExperiences.map((experience) => (
                     <TourCard key={experience._id ?? experience.id} tour={experience} />
                   ))}
                 </div>
 
-                <div className="mt-8 flex items-center justify-center gap-4">
-                  <button
-                    onClick={() => setPage(Math.max(1, page - 1))}
-                    className="px-3 py-1 border"
-                  >
-                    Prev
-                  </button>
-                  <span>Page {page}</span>
-                  <button
-                    onClick={() => setPage(page + 1)}
-                    className="px-3 py-1 border"
-                  >
-                    Next
-                  </button>
-                </div>
+                {/* Pagination - Show if we have experiences or if there might be more pages */}
+                {(filteredExperiences.length > 0 || page > 1) && (
+                  <div className="mt-12 flex items-center justify-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage(Math.max(1, page - 1))}
+                      disabled={page === 1}
+                      className="gap-1"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      Previous
+                    </Button>
+                    {totalPages > 1 && (
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                          let pageNum: number;
+                          if (totalPages <= 7) {
+                            pageNum = i + 1;
+                          } else if (page <= 4) {
+                            pageNum = i + 1;
+                          } else if (page >= totalPages - 3) {
+                            pageNum = totalPages - 6 + i;
+                          } else {
+                            pageNum = page - 3 + i;
+                          }
+                          return (
+                            <Button
+                              key={pageNum}
+                              variant={page === pageNum ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => setPage(pageNum)}
+                              className="w-10"
+                            >
+                              {pageNum}
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage(page + 1)}
+                      disabled={filteredExperiences.length < limit && page > 1}
+                      className="gap-1"
+                    >
+                      Next
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
 
                 {filteredExperiences.length === 0 && (
                   <div className="text-center py-16">

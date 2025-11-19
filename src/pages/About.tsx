@@ -1,10 +1,10 @@
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import PageHeader from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Heart, Users, Award, Globe } from "lucide-react";
 import { Link } from "react-router-dom";
-import coffeeImage from "@/assets/coffee-ceremony.jpg";
 
 const About = () => {
   return (
@@ -13,20 +13,14 @@ const About = () => {
       
       <main className="flex-1 pt-16">
         {/* Hero Section */}
-        <section className="relative bg-gradient-to-br from-primary via-primary-light to-earth py-24 text-primary-foreground overflow-hidden">
-          <div className="absolute inset-0 pattern-ethiopian" />
-          <div className="container mx-auto px-4 relative z-10">
-            <div className="max-w-3xl animate-fade-in">
-              <h1 className="font-display text-5xl md:text-6xl font-bold mb-6">
-                Connect Through <span className="text-secondary">Home Experiences</span>
-              </h1>
-              <p className="text-lg text-primary-foreground/90 leading-relaxed">
-                We're passionate about creating authentic connections between travelers and local families 
-                through immersive cultural experiences in intimate home settings.
-              </p>
-            </div>
-          </div>
-        </section>
+        <PageHeader
+          title={
+            <>
+              Connect Through <span className="text-primary">Home Experiences</span>
+            </>
+          }
+          description="We're passionate about creating authentic connections between travelers and local families through immersive cultural experiences in intimate home settings."
+        />
 
         {/* Our Story */}
         <section className="py-24">
@@ -58,9 +52,15 @@ const About = () => {
               </div>
               <div className="rounded-2xl overflow-hidden shadow-2xl animate-slide-in">
                 <img 
-                  src={coffeeImage} 
-                  alt="Ethiopian coffee ceremony"
+                  src="/collages.jpg" 
+                  alt="Ethiopian cultural experiences"
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    if (target.src.endsWith('.jpg')) {
+                      target.src = '/collages.png';
+                    }
+                  }}
                 />
               </div>
             </div>

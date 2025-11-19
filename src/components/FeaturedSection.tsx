@@ -51,11 +51,11 @@ const FeaturedSection = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="flex md:grid md:grid-cols-2 lg:grid-cols-4 gap-6 overflow-x-auto pb-4 md:pb-0 scrollbar-hide md:overflow-x-visible">
           {features.map((feature, index) => (
             <Card
               key={index}
-              className="group overflow-hidden hover-lift border-2 hover:border-primary/20 transition-all"
+              className="group overflow-hidden hover-lift border border-border/50 hover:border-primary/30 hover:shadow-md transition-all duration-300 flex-shrink-0 w-[280px] md:w-auto"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className="relative h-48 overflow-hidden">
@@ -64,20 +64,20 @@ const FeaturedSection = () => {
                   alt={feature.title}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-primary/70 to-transparent" />
                 <div
-                  className={`absolute bottom-4 left-4 w-12 h-12 rounded-full bg-background flex items-center justify-center ${
+                  className={`absolute bottom-4 left-4 w-10 h-10 rounded-full bg-background/95 backdrop-blur-sm shadow-sm flex items-center justify-center border border-border/50 ${
                     feature.color
                   }`}
                 >
-                  <feature.icon className="w-6 h-6" />
+                  <feature.icon className="w-5 h-5" />
                 </div>
               </div>
-              <CardContent className="p-6">
-                <h3 className="font-display text-xl font-bold text-foreground mb-2">
+              <CardContent className="p-5">
+                <h3 className="font-display text-lg font-bold text-foreground mb-2">
                   {feature.title}
                 </h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   {feature.description}
                 </p>
               </CardContent>

@@ -1,16 +1,52 @@
 import { useQuery } from "@tanstack/react-query";
 import { withdrawalsAPI } from "@/lib/api";
 import { useNavigate } from "react-router-dom";
+import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
+import PageHeader from "@/components/PageHeader";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, ArrowLeft, Banknote, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 
 function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, string> = {
-    pending_transfer: "bg-amber-100 text-amber-800",
-    paid: "bg-emerald-100 text-emerald-800",
-    failed: "bg-red-100 text-red-800",
-    canceled: "bg-gray-100 text-gray-800",
+  const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: any }> = {
+    pending_transfer: {
+      label: "Pending Transfer",
+      variant: "outline",
+      icon: Clock,
+    },
+    paid: {
+      label: "Paid",
+      variant: "default",
+      icon: CheckCircle,
+    },
+    failed: {
+      label: "Failed",
+      variant: "destructive",
+      icon: XCircle,
+    },
+    canceled: {
+      label: "Canceled",
+      variant: "secondary",
+      icon: AlertCircle,
+    },
   };
-  const cls = map[status] || "bg-gray-100 text-gray-800";
-  return <span className={`px-2 py-0.5 rounded text-xs font-medium ${cls}`}>{status}</span>;
+
+  const config = statusConfig[status] || {
+    label: status,
+    variant: "outline" as const,
+    icon: AlertCircle,
+  };
+
+  const Icon = config.icon;
+
+  return (
+    <Badge variant={config.variant} className="flex items-center gap-1 w-fit">
+      <Icon className="w-3 h-3" />
+      {config.label}
+    </Badge>
+  );
 }
 
 export default function MyWithdrawals() {
@@ -18,47 +54,104 @@ export default function MyWithdrawals() {
   const items = data?.data?.withdrawals || [];
   const navigate = useNavigate();
 
-  if (isLoading) return <div className="p-6">Loading withdrawals...</div>;
-
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Withdrawals</h1>
-          <p className="text-muted-foreground mt-1">Track your withdrawal requests and their statuses.</p>
-        </div>
-        <button onClick={() => navigate(-1)} className="h-9 px-3 rounded border">Back</button>
-      </div>
+    <div className="min-h-screen flex flex-col">
+      <Navigation />
 
-      {items.length === 0 ? (
-        <div className="rounded-lg border p-10 text-center bg-white">
-          <div className="text-lg font-medium">No withdrawals yet</div>
-          <p className="text-sm text-muted-foreground mt-1">Request your first withdrawal from the Wallet page.</p>
+      <main className="flex-1 pt-16">
+        {/* Header */}
+        <div className="relative">
+          <div className="absolute top-6 left-4 z-20">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/host/wallet")}
+              className="bg-background/80 backdrop-blur-sm text-muted-foreground hover:text-foreground border border-border/50"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Wallet
+            </Button>
+          </div>
+          <PageHeader
+            title={
+              <>
+                <Banknote className="w-10 h-10 inline-block mr-3 text-primary" />
+                Withdrawal History
+              </>
+            }
+            description="Track your withdrawal requests and their statuses."
+          />
         </div>
-      ) : (
-        <div className="rounded-lg border overflow-x-auto bg-white">
-          <table className="min-w-full text-sm">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="text-left px-4 py-2">Created</th>
-                <th className="text-left px-4 py-2">Amount</th>
-                <th className="text-left px-4 py-2">Status</th>
-                <th className="text-left px-4 py-2">ID</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((w: any) => (
-                <tr key={w._id} className="border-t">
-                  <td className="px-4 py-2">{new Date(w.createdAt).toLocaleString()}</td>
-                  <td className="px-4 py-2 font-medium">${(w.amountCents / 100).toFixed(2)}</td>
-                  <td className="px-4 py-2"><StatusBadge status={w.status} /></td>
-                  <td className="px-4 py-2 font-mono text-xs">{w._id}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+
+        {/* Content */}
+        <section className="py-16">
+          <div className="container mx-auto px-4">
+            {isLoading ? (
+              <Card>
+                <CardContent className="p-12 text-center">
+                  <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
+                  <p className="text-lg text-muted-foreground">Loading withdrawals...</p>
+                </CardContent>
+              </Card>
+            ) : items.length === 0 ? (
+              <Card>
+                <CardContent className="p-12 text-center">
+                  <Banknote className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-xl font-semibold mb-2">No Withdrawals Yet</h3>
+                  <p className="text-sm text-muted-foreground mb-6">
+                    Request your first withdrawal from the Wallet page.
+                  </p>
+                  <Button onClick={() => navigate("/host/wallet")} variant="hero">
+                    Go to Wallet
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full text-sm">
+                      <thead className="bg-muted/50 border-b border-border">
+                        <tr>
+                          <th className="text-left px-6 py-4 font-semibold text-foreground">Created</th>
+                          <th className="text-left px-6 py-4 font-semibold text-foreground">Amount</th>
+                          <th className="text-left px-6 py-4 font-semibold text-foreground">Status</th>
+                          <th className="text-left px-6 py-4 font-semibold text-foreground">ID</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {items.map((w: any) => (
+                          <tr
+                            key={w._id}
+                            className="border-b border-border hover:bg-muted/30 transition-colors"
+                          >
+                            <td className="px-6 py-4 text-foreground">
+                              {new Date(w.createdAt).toLocaleString()}
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="font-semibold text-foreground">
+                                ETB {(w.amountCents / 100).toFixed(2)}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <StatusBadge status={w.status} />
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="font-mono text-xs text-muted-foreground">{w._id}</span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </section>
+      </main>
+
+      <Footer />
     </div>
   );
 }

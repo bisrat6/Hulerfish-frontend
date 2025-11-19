@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import PageHeader from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -99,18 +100,10 @@ const Profile = () => {
       <Navigation />
 
       <main className="flex-1 pt-16">
-        <section className="relative bg-gradient-to-br from-primary via-primary-light to-earth py-24 text-primary-foreground">
-          <div className="absolute inset-0 pattern-ethiopian opacity-10" />
-          <div className="container mx-auto px-4 relative z-10">
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="font-display text-5xl md:text-6xl font-bold text-center"
-            >
-              My Profile
-            </motion.h1>
-          </div>
-        </section>
+        <PageHeader
+          title="My Profile"
+          className="text-center"
+        />
 
         <section className="py-16">
           <div className="container mx-auto px-4 max-w-2xl">
@@ -272,6 +265,14 @@ const Profile = () => {
                         >
                           Admin Dashboard
                         </Button>
+                        <Button
+                          variant="outline"
+                          size="lg"
+                          onClick={() => navigate("/admin/payouts")}
+                          className="w-full mt-3"
+                        >
+                          Payouts
+                        </Button>
                       </>
                     )}
 
@@ -313,6 +314,24 @@ const Profile = () => {
                           {user?.guideStatus === "pending"
                             ? "Application Pending Review"
                             : "Apply to Become a Guide"}
+                        </Button>
+                      </>
+                    )}
+
+                    {user?.guideStatus === "approved" && user?.role !== "admin" && (
+                      <>
+                        <div className="pt-4 border-t">
+                          <p className="text-sm font-medium text-muted-foreground mb-3">
+                            Guide Panel
+                          </p>
+                        </div>
+                        <Button
+                          variant="hero"
+                          size="lg"
+                          onClick={() => navigate("/guide/dashboard")}
+                          className="w-full"
+                        >
+                          Guide Dashboard
                         </Button>
                       </>
                     )}

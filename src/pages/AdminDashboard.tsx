@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import PageHeader from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
@@ -144,26 +145,15 @@ const AdminDashboard = () => {
 
       <main className="flex-1 pt-16">
         {/* Header */}
-        <section className="relative bg-gradient-to-br from-primary via-primary-light to-earth py-24 text-primary-foreground">
-          <div className="absolute inset-0 pattern-ethiopian opacity-10" />
-          <div className="container mx-auto px-4 relative z-10">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="max-w-3xl"
-            >
-              <h1 className="font-display text-5xl md:text-6xl font-bold mb-6 flex items-center gap-4">
-                <BarChart3 className="w-12 h-12" />
-                Admin Dashboard
-              </h1>
-              <p className="text-lg text-primary-foreground/90">
-                Welcome back, {user?.name}! Here's an overview of your
-                platform's performance.
-              </p>
-            </motion.div>
-          </div>
-        </section>
+        <PageHeader
+          title={
+            <>
+              <BarChart3 className="w-10 h-10 inline-block mr-3 text-primary" />
+              Admin Dashboard
+            </>
+          }
+          description={`Welcome back, ${user?.name}! Here's an overview of your platform's performance.`}
+        />
 
         {/* Stats Grid */}
         <section className="py-16">

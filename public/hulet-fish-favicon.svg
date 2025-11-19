@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="culturalGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2d5a3d"/>
+      <stop offset="100%" stop-color="#1e3e2a"/>
+    </linearGradient>
+    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffd700"/>
+      <stop offset="100%" stop-color="#ffed4e"/>
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="20" fill="#2d5a3d"/>
+  
+  <!-- Traditional Ethiopian Coffee Pot (Jebena) -->
+  <!-- Pot body -->
+  <ellipse cx="50" cy="65" rx="22" ry="18" fill="url(#culturalGradient)"/>
+  <ellipse cx="50" cy="65" rx="20" ry="16" fill="#1e3e2a" opacity="0.3"/>
+  
+  <!-- Pot neck -->
+  <rect x="45" y="35" width="10" height="25" rx="5" fill="url(#culturalGradient)"/>
+  
+  <!-- Pot spout -->
+  <path d="M 72 60 Q 80 55, 78 50 Q 76 45, 72 50 Q 70 55, 72 60" fill="url(#culturalGradient)"/>
+  
+  <!-- Pot handle -->
+  <path d="M 28 55 Q 20 50, 22 45 Q 24 40, 28 45 Q 30 50, 28 55" fill="url(#culturalGradient)" opacity="0.8"/>
+  
+  <!-- Traditional decorative pattern (Ethiopian cross-inspired) -->
+  <circle cx="50" cy="50" r="8" fill="none" stroke="url(#goldGradient)" stroke-width="1.5" opacity="0.8"/>
+  <circle cx="50" cy="50" r="4" fill="url(#goldGradient)" opacity="0.6"/>
+  
+  <!-- Decorative elements -->
+  <circle cx="42" cy="45" r="1.5" fill="url(#goldGradient)" opacity="0.7"/>
+  <circle cx="58" cy="45" r="1.5" fill="url(#goldGradient)" opacity="0.7"/>
+  <circle cx="50" cy="40" r="1.5" fill="url(#goldGradient)" opacity="0.7"/>
+  
+  <!-- Steam lines (representing coffee ceremony) -->
+  <path d="M 50 30 Q 48 25, 50 20" stroke="url(#goldGradient)" stroke-width="1.5" fill="none" opacity="0.6" stroke-linecap="round"/>
+  <path d="M 50 30 Q 52 25, 50 20" stroke="url(#goldGradient)" stroke-width="1.5" fill="none" opacity="0.6" stroke-linecap="round"/>
+</svg>
