@@ -32,21 +32,22 @@ const About = () => {
                 </h2>
                 <div className="space-y-4 text-muted-foreground leading-relaxed">
                   <p>
-                    Founded by a team passionate about authentic cultural exchange, 
-                    Etxplore was born from a simple mission: to connect travelers with local families 
-                    through meaningful home-based experiences.
+                    HuletFish is an Experience Booking Platform that empowers local hosts to share their 
+                    culture and traditions with travelers from around the world. We've built a marketplace 
+                    where anyone can apply to become a host and create authentic home-based experiences.
                   </p>
                   <p>
-                    From traditional coffee ceremonies in family living rooms to hands-on cooking workshops 
-                    in local kitchens, from art & craft immersion in artisan studios to music & dance 
-                    performances in intimate settings, we believe the most authentic cultural connections 
-                    happen in the comfort of local homes.
+                    Our platform enables approved hosts to showcase their unique offerings—from traditional 
+                    coffee ceremonies and hands-on cooking workshops to art & craft sessions and music & 
+                    dance performances. Each experience is created and managed by local hosts who set their 
+                    own prices, manage their availability, and earn income directly from sharing their culture.
                   </p>
                   <p>
-                    With years of local expertise and a deep respect for Ethiopian culture, we carefully 
-                    curate experiences that go beyond typical tourism. We partner with local families, 
-                    support community-based tourism, and ensure every interaction creates lasting positive 
-                    impact for both guests and hosts.
+                    Through our host application and approval system, we ensure quality while democratizing 
+                    access to cultural tourism. Hosts go through a simple application process, and once 
+                    approved, they can create multiple experiences, manage bookings, and build their own 
+                    cultural tourism business. This creates meaningful connections between travelers and 
+                    local communities while supporting sustainable, community-based tourism in Ethiopia.
                   </p>
                 </div>
               </div>
@@ -143,7 +144,7 @@ const About = () => {
                     </Link>
                   </Button>
                   <Button asChild variant="outline" size="xl" className="bg-background/10 backdrop-blur-sm text-primary-foreground border-primary-foreground/30 hover:bg-background/20">
-                    <a href="mailto:hello@etxplore.com">
+                    <a href="mailto:hello@huletfish.com">
                       Contact Us
                     </a>
                   </Button>
